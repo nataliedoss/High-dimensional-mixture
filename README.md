@@ -5,7 +5,7 @@ This is a Python3 implementation of the High Dimensional Denoised Method of Mome
 
 To get started, run the code in test.py. 
 
-# External dependencies:
+## External dependencies:
 
 [Numpy](http://numpy.org/)
 
