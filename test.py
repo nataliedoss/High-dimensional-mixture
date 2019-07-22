@@ -3,11 +3,10 @@
 #################################################################################
 
 
-from dmm_hd import DMM_HD   
-from model_gm import ModelGM_HD, ModelGM, sample_gm
-from discrete_rv import DiscreteRV_HD, wass_hd, wass
+from dmm_hd import *
+from model_gm import *
+from discrete_rv import *
 
-import numpy as np
 from sklearn.mixture import GaussianMixture
 import matplotlib.pyplot as plt
 import time
