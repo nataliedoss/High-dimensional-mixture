@@ -13,17 +13,17 @@ import time
 
 
 # Set the model parameters.
-d = 10
+d = 100
 k = 3
 k_est = k
 ld_est = k_est - 1
-x1 = np.repeat(2, d)
-x2 = np.repeat(-2, d)
+x1 = np.repeat(1, d)
+x2 = np.repeat(-1, d)
 x3 = np.repeat(0, d)
 x = np.array((x1, x2, x3))
 weights = np.repeat(1.0/k, k)
 u_rv = DiscreteRV_HD(weights, x) # truth
-num = 1000 # sample size
+num = 500 # sample size
 sigma = 0.5
 factor = 1.0
 
@@ -43,8 +43,8 @@ alg = DMM_HD(k_est, ld_est, 1.0)
 start_dmm = time.time()
 v_rv = alg.estimate(sample, factor)
 end_dmm = time.time()
-print(end_dmm - start_dmm)
-print(wass_hd(u_rv, v_rv))
+print("The time to run HD DMM on this sample was", end_dmm-start_dmm)
+print("The error from HD DMM was", wass_hd(u_rv, v_rv))
 
 
 # Run EM on this sample.
@@ -53,26 +53,39 @@ em = GaussianMixture(n_components = k, covariance_type = 'spherical',
 start_em = time.time()
 em.fit(sample)
 end_em = time.time()
-print(end_em - start_em)
 v_rv_em = DiscreteRV_HD(em.weights_, em.means_)
-print(wass_hd(u_rv, v_rv_em))
+print("The time to run EM on this sample was", end_em - start_em)
+print("The error from EM was", wass_hd(u_rv, v_rv_em))
+
+
+
+#################################################################################
+# Test some functions in the HD DMM algorithm
+
+U_ld = alg.estimate_center_space(sample)
+sample_ld = np.matmul(sample, U_ld)
+net_weights = alg.generate_net_weights(num, factor)
+candidate_ests = alg.generate_candidates(sample_ld, net_weights)
+
+#net_weights = alg.generate_net_weights(num, factor)
+#net_thetas = alg.generate_net_thetas(num)
+#tmp = alg.estimate_ld(sample_ld, factor)
+
+# In this case, there are (9 choose 6) candidate estimates
+# And a weights net of size 6
+# Total number of candidate estimates is 504.
+# Computing W_1 distance for each of these against each projected estimate is
+# what causes algorithm slowness.
+# It's not anything else (wass_hd isn't slow, etc, I checked).
+
 
 
 
 #################################################################################
 # Check the function for Wasserstein-1 distance in d dimensions.
-# It should equal the wass function when d = 1.
 u_rv = DiscreteRV_HD((0.5, 0.5), (1, -1))
-v_rv = DiscreteRV_HD((0.4, 0.6), (.9, -1.2))
-wass(u_rv, v_rv)
-wass_hd(u_rv, v_rv)
-
-
-# TESTS
-U_ld = alg.estimate_center_space(sample)
-sample_ld = np.matmul(sample, U_ld)
-net_weights = alg.generate_net_weights(num, factor)
-net_thetas = alg.generate_net_thetas(num)
-tmp = alg.estimate_ld(sample_ld, factor)
-
+v_rv = DiscreteRV_HD((0.3, 0.7), (2, -1.2))
+# The following two should be the same:
+print(wass(u_rv, v_rv))
+print(wass_hd(u_rv, v_rv))
 
