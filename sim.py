@@ -24,9 +24,9 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor):
     for i in range(len(d_range)):
         d = d_range[i]
         x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
-        x_centered = x - np.average(x, axis=0, weights=weights)
-        u_rv = DiscreteRV_HD(weights, x_centered) # true model
-        model = ModelGM_HD(w=weights, x=x_centered, std=sigma)
+        #x_centered = x - np.average(x, axis=0, weights=weights) # If you want the true model to be centered
+        u_rv = DiscreteRV_HD(weights, x) # true model
+        model = ModelGM_HD(w=weights, x=x, std=sigma)
 
         for j in range(num_sims):
             
@@ -75,10 +75,10 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor):
 
 ####################################################################
 # Run sim study
-num_sims = 20
-num = 500
+num_sims = 2
+num = 1000
 sigma = 1.0
-d_range = np.arange(10, 100, 10)
+d_range = np.arange(10, 20, 10)
 factor = 20.0
 
 
@@ -92,8 +92,8 @@ sim_k3 = sim_over_d(num_sims=num_sims, k=3, ld=2, num=num,
 
 # k = 2
 # Accuracy
-#plt.subplot(1, 2, 1)
-plt.plot()
+plt.subplot(1, 2, 1)
+#plt.plot()
 p1 = plt.errorbar(d_range, sim_k2[0], sim_k2[1])
 p2 = plt.errorbar(d_range, sim_k2[2], sim_k2[3])
 plt.title("k = 2: Accuracy as d grows")
@@ -101,13 +101,13 @@ plt.xlabel("d")
 plt.ylabel("Wasserstein-1")
 plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
 # Time
-#plt.subplot(1, 2, 2)
-#p1 = plt.scatter(d_range, sim_k2[4])
-#p2 = plt.scatter(d_range, sim_k2[5])
-#plt.title("k = 2: Time as d grows")
-#plt.xlabel("d")
-#plt.ylabel("Time")
-#plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
+plt.subplot(1, 2, 2)
+p1 = plt.scatter(d_range, sim_k2[4])
+p2 = plt.scatter(d_range, sim_k2[5])
+plt.title("k = 2: Time as d grows")
+plt.xlabel("d")
+plt.ylabel("Time")
+plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
 plt.savefig("sim_k2.pdf")
 plt.close()
 
@@ -115,8 +115,8 @@ plt.close()
 
 # k = 3
 # Accuracy
-#plt.subplot(1, 2, 1)
-plt.plot()
+plt.subplot(1, 2, 1)
+#plt.plot()
 p1 = plt.errorbar(d_range, sim_k3[0], sim_k3[1])
 p2 = plt.errorbar(d_range, sim_k3[2], sim_k3[3])
 plt.title("K = 3: Accuracy as d grows")
@@ -124,13 +124,13 @@ plt.xlabel("d")
 plt.ylabel("Wasserstein-1")
 plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
 # Time
-#plt.subplot(1, 2, 2)
-#p1 = plt.scatter(d_range, sim_k3[4])
-#p2 = plt.scatter(d_range, sim_k3[5])
-#plt.title("k = 3: Time as d grows")
-#plt.xlabel("d")
-#plt.ylabel("Time")
-#plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
+plt.subplot(1, 2, 2)
+p1 = plt.scatter(d_range, sim_k3[4])
+p2 = plt.scatter(d_range, sim_k3[5])
+plt.title("k = 3: Time as d grows")
+plt.xlabel("d")
+plt.ylabel("Time")
+plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
 plt.savefig("sim_k3.pdf")
 plt.close()
 
