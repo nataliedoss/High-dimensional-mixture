@@ -86,25 +86,6 @@ class DMM_HD():
 
     def generate_net_thetas(self, num):
         """
-        Method to generate epsilon net on unit vectors in ld space.
-        This method generates "size" random Gaussian vectors in ld space and normalizes them. Approximate grid. 
-        The "size" of an epsilon net in ld space is (1/epsilon)^ld. Here epsilon is rate, so 1/epsilon is rate_inverse.
-
-        Args:
-        num: Int. Number of samples in dataset.
-
-        Returns:
-        Array(float, (size of epsilon net in ld space) x ld).
-        """
-        
-        rate_inverse = self.compute_rate_inverse(num)
-        nt = rate_inverse**self.ld
-        thetas = np.random.multivariate_normal(np.zeros(self.ld), np.identity(self.ld), nt)
-        return (thetas.T / np.apply_along_axis(np.linalg.norm, 1, thetas)).T
-
-
-    def generate_net_thetas(self, num):
-        """
         Another method to generate epsilon net on unit vectors in ld space.
         This method generates (1/epsilon) grid points in each direction in ld space, then takes all combinations.
 
@@ -124,6 +105,25 @@ class DMM_HD():
                 thetas[((i*len(grid_1d)) + j), ] = np.array((grid_1d[i], grid_1d[j]))
         thetas = thetas[~np.all(thetas == 0, axis=1)] # Remove any row with all zeros
 
+        return (thetas.T / np.apply_along_axis(np.linalg.norm, 1, thetas)).T
+
+
+    def generate_net_thetas(self, num):
+        """
+        Method to generate epsilon net on unit vectors in ld space.
+        This method generates "size" random Gaussian vectors in ld space and normalizes them. Approximate grid. 
+        The "size" of an epsilon net in ld space is (1/epsilon)^ld. Here epsilon is rate, so 1/epsilon is rate_inverse.
+
+        Args:
+        num: Int. Number of samples in dataset.
+
+        Returns:
+        Array(float, (size of epsilon net in ld space) x ld).
+        """
+        
+        rate_inverse = self.compute_rate_inverse(num)
+        nt = rate_inverse**self.ld
+        thetas = np.random.multivariate_normal(np.zeros(self.ld), np.identity(self.ld), nt)
         return (thetas.T / np.apply_along_axis(np.linalg.norm, 1, thetas)).T
    
 
@@ -214,7 +214,7 @@ class DMM_HD():
                 candidate_ests_theta[(i * nt) + j] = DiscreteRV_HD(weights, atoms)
                 errors_candidate_ests[i, j] = wass_hd(candidate_ests_theta[(i * nt) + j], theta_ests[j])
 
-        avg_errors = np.mean(errors_candidate_ests, axis=1)
+        avg_errors = np.max(errors_candidate_ests, axis=1)
         est_selected = candidate_ests[np.argmin(avg_errors)]
 
         return est_selected
