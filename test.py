@@ -14,18 +14,17 @@ import time
 
 # Set the model parameters.
 d = 100
-k = 3
+k = 2
 k_est = k
-ld_est = k_est - 1
+ld_est = k_est 
 x1 = np.repeat(1, d)
 x2 = np.repeat(-1, d)
-x3 = np.repeat(0, d)
-x = np.array((x1, x2, x3))
+x = np.array((x1, x2))
 weights = np.repeat(1.0/k, k)
 u_rv = DiscreteRV_HD(weights, x) # truth
-num = 500 # sample size
+num = 1000 # sample size
 sigma = 0.5
-factor = 1.0
+factor = 20.0
 
 
 # Generate a sample from this model.
