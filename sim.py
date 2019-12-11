@@ -24,7 +24,8 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor):
     for i in range(len(d_range)):
         d = d_range[i]
         x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
-        #x_centered = x - np.average(x, axis=0, weights=weights) # If you want the true model to be centered
+        # If you want the true model to be centered:
+        #x_centered = x - np.average(x, axis=0, weights=weights)
         u_rv = DiscreteRV_HD(weights, x) # true model
         model = ModelGM_HD(w=weights, x=x, std=sigma)
 
@@ -75,16 +76,16 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor):
 
 ####################################################################
 # Run sim study
-num_sims = 2
+num_sims = 5
 num = 1000
 sigma = 1.0
-d_range = np.arange(10, 20, 10)
+d_range = np.arange(10, 50, 5)
 factor = 20.0
 
 
-sim_k2 = sim_over_d(num_sims=num_sims, k=2, ld=1, num=num,
+sim_k2 = sim_over_d(num_sims=num_sims, k=2, ld=2, num=num,
                     sigma=sigma, d_range=d_range, factor=factor)
-sim_k3 = sim_over_d(num_sims=num_sims, k=3, ld=2, num=num,
+sim_k3 = sim_over_d(num_sims=num_sims, k=3, ld=3, num=num,
                     sigma=sigma, d_range=d_range, factor=factor)
 
 
