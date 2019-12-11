@@ -21,7 +21,7 @@ class DMM_HD():
         """
         Args:
         k: Integer. The number of components in the model.
-        ld: Integer. The latent dimension of the model (usually k-1).
+        ld: Integer. The latent dimension of the model (usually k or k-1).
         sigma: Float. The known standard deviation.
         """
         
@@ -86,8 +86,9 @@ class DMM_HD():
 
     def generate_net_thetas(self, num):
         """
-        Another method to generate epsilon net on unit vectors in ld space.
+        One method to generate epsilon net on unit vectors in ld space.
         This method generates (1/epsilon) grid points in each direction in ld space, then takes all combinations.
+        BUT this method only works for self.ld = 2. 
 
         Args:
         num: Int. Number of samples in dataset.
@@ -110,7 +111,7 @@ class DMM_HD():
 
     def generate_net_thetas(self, num):
         """
-        Method to generate epsilon net on unit vectors in ld space.
+        One method to generate epsilon net on unit vectors in ld space.
         This method generates "size" random Gaussian vectors in ld space and normalizes them. Approximate grid. 
         The "size" of an epsilon net in ld space is (1/epsilon)^ld. Here epsilon is rate, so 1/epsilon is rate_inverse.
 
