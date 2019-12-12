@@ -13,7 +13,7 @@ import time
 
 
 # Set the model parameters.
-d = 100
+d = 2
 k = 2
 k_est = k
 ld_est = k_est 
@@ -40,7 +40,7 @@ plt.show()
 # Run the high dimensional DMM on this sample.
 alg = DMM_HD(k_est, ld_est, 1.0)
 start_dmm = time.time()
-v_rv = alg.estimate(sample, factor)
+v_rv = alg.estimate_ld(sample, factor)
 end_dmm = time.time()
 print("The time to run HD DMM on this sample was", end_dmm-start_dmm)
 print("The error from HD DMM was", wass_hd(u_rv, v_rv))
@@ -61,16 +61,62 @@ print("The error from EM was", wass_hd(u_rv, v_rv_em))
 #################################################################################
 # Test some functions in the HD DMM algorithm
 
-U_ld = alg.estimate_center_space(sample)
-sample_ld = np.matmul(sample, U_ld)
+# Check that DMM works on each coordinate
+# And that we generate an S containing a good candidate
+mat_centers = np.empty(shape = (alg.k, alg.ld))
+
+for j in range(alg.ld):
+    dmm = DMM(alg.k, sigma=None)
+    est = dmm.estimate(sample[:, j])
+    mat_centers[:, j] = est.centers
+
+A = list(itertools.product(*mat_centers.T))
+S_centers = list(itertools.combinations(A, alg.k))
+
+
+# Define the nets and parameters to do sliced MoM
 net_weights = alg.generate_net_weights(num, factor)
-candidate_ests = alg.generate_candidates(sample_ld, net_weights)
+net_thetas = alg.generate_net_thetas(num)
+rate_inverse = alg.compute_rate_inverse(num)
+nt = len(net_thetas)
 
-#net_weights = alg.generate_net_weights(num, factor)
-#net_thetas = alg.generate_net_thetas(num)
-#tmp = alg.estimate_ld(sample_ld, factor)
 
-# In this case, there are (9 choose 6) candidate estimates
+# Generate the candidate estimates
+candidate_ests = alg.generate_candidates(sample, net_weights)
+theta_ests = alg.generate_theta_ests(sample, net_thetas)
+
+# In this example, something around 152 should be best
+best = 152
+candidate_ests[best].atoms
+candidate_ests[best].weights
+print(wass_hd(u_rv, candidate_ests[best]))
+
+# Check that this is indeed what we select
+candidate_ests_theta = [None] * len(candidate_ests) * nt
+errors_candidate_ests = np.empty(shape = (len(candidate_ests), nt))
+
+for i in range(len(candidate_ests)):
+    for j in range(nt):
+        weights = candidate_ests[i].weights
+        atoms = np.matmul(candidate_ests[i].atoms, net_thetas[j].T)
+        candidate_ests_theta[(i * nt) + j] = DiscreteRV_HD(weights, atoms)
+        errors_candidate_ests[i, j] = wass_hd(candidate_ests_theta[(i * nt) + j], theta_ests[j])
+
+
+avg_errors = np.mean(errors_candidate_ests, axis=1)
+est_selected = candidate_ests[np.argmin(avg_errors)]
+print(np.argmin(avg_errors))
+print(est_selected.atoms)
+print(est_selected.weights)
+
+# Whereas what you should have selected was:
+best = 152
+print(wass_hd(u_rv, est_selected))
+
+
+
+    
+# When k = 3, there are (9 choose 6) candidate estimates
 # And a weights net of size 6
 # Total number of candidate estimates is 504.
 # Computing W_1 distance for each of these against each projected estimate is
@@ -85,6 +131,6 @@ candidate_ests = alg.generate_candidates(sample_ld, net_weights)
 u_rv = DiscreteRV_HD((0.5, 0.5), (1, -1))
 v_rv = DiscreteRV_HD((0.3, 0.7), (2, -1.2))
 # The following two should be the same:
-print(wass(u_rv, v_rv))
-print(wass_hd(u_rv, v_rv))
+#print(wass(u_rv, v_rv))
+#print(wass_hd(u_rv, v_rv))
 
