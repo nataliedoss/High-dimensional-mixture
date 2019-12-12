@@ -84,30 +84,6 @@ class DMM_HD():
         return simplex_grid(self.k, factor*rate_inverse) / (factor*rate_inverse)
 
 
-    def generate_net_thetas(self, num):
-        """
-        One method to generate epsilon net on unit vectors in ld space.
-        This method generates (1/epsilon) grid points in each direction in ld space, then takes all combinations.
-        BUT this method only works for self.ld = 2. 
-
-        Args:
-        num: Int. Number of samples in dataset.
-
-        Returns:
-        Array(float, (size of epsilon net in ld space) x ld).
-        """
-
-        rate_inverse = self.compute_rate_inverse(num)
-        nt = rate_inverse**self.ld
-        grid_1d = np.arange(-1, 1.1, 1.0/nt)
-        thetas = np.empty((len(grid_1d)**self.ld, self.ld))
-        for i in range(len(grid_1d)):
-            for j in range(len(grid_1d)):
-                thetas[((i*len(grid_1d)) + j), ] = np.array((grid_1d[i], grid_1d[j]))
-        thetas = thetas[~np.all(thetas == 0, axis=1)] # Remove any row with all zeros
-
-        return (thetas.T / np.apply_along_axis(np.linalg.norm, 1, thetas)).T
-
 
     def generate_net_thetas(self, num):
         """
@@ -126,6 +102,32 @@ class DMM_HD():
         nt = rate_inverse**self.ld
         thetas = np.random.multivariate_normal(np.zeros(self.ld), np.identity(self.ld), nt)
         return (thetas.T / np.apply_along_axis(np.linalg.norm, 1, thetas)).T
+
+    
+    def generate_net_thetas(self, num):
+        """
+        One method to generate epsilon net on unit vectors in ld space.
+        This method generates (1/epsilon) grid points in each direction in ld space, then takes all combinations.
+        BUT this method only works for self.ld = 2. 
+
+        Args:
+        num: Int. Number of samples in dataset.
+
+        Returns:
+        Array(float, (size of epsilon net in ld space) x ld).
+        """
+
+        rate_inverse = self.compute_rate_inverse(num)
+        nt = rate_inverse**self.ld
+        nt = 2 # HACKY, BUT WE DON'T NEED MORE THAN THIS
+        grid_1d = np.arange(-1, 1.1, 1.0/nt)
+        thetas = np.empty((len(grid_1d)**self.ld, self.ld))
+        for i in range(len(grid_1d)):
+            for j in range(len(grid_1d)):
+                thetas[((i*len(grid_1d)) + j), ] = np.array((grid_1d[i], grid_1d[j]))
+        thetas = thetas[~np.all(thetas == 0, axis=1)] # Remove any row with all zeros
+
+        return np.unique((thetas.T / np.apply_along_axis(np.linalg.norm, 1, thetas)).T, axis=0)
    
 
     def generate_candidates(self, sample_ld, net_weights):
@@ -199,8 +201,7 @@ class DMM_HD():
         
         net_weights = self.generate_net_weights(num, factor)
         net_thetas = self.generate_net_thetas(num)
-        rate_inverse = self.compute_rate_inverse(num)
-        nt = rate_inverse**self.ld
+        nt = net_thetas.shape[1]
 
         candidate_ests = self.generate_candidates(sample_ld, net_weights)
         theta_ests = self.generate_theta_ests(sample_ld, net_thetas)
@@ -215,7 +216,9 @@ class DMM_HD():
                 candidate_ests_theta[(i * nt) + j] = DiscreteRV_HD(weights, atoms)
                 errors_candidate_ests[i, j] = wass_hd(candidate_ests_theta[(i * nt) + j], theta_ests[j])
 
-        avg_errors = np.max(errors_candidate_ests, axis=1)
+        avg_errors = np.mean(errors_candidate_ests, axis=1)
+        # OR:
+        #avg_errors = np.max(errors_candidate_ests, axis=1)
         est_selected = candidate_ests[np.argmin(avg_errors)]
 
         return est_selected
