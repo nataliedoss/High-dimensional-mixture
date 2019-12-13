@@ -12,7 +12,7 @@ import time
 
 ###############################################################
 # Simulation study: n varies
-def sim_over_n(num_sims, k, ld, d, sigma, n_range, factor):
+def sim_over_n(num_sims, k, ld, d, sigma, n_range, factor_weights, factor_thetas):
     k_est = k
     ld_est = ld
 
@@ -38,7 +38,7 @@ def sim_over_n(num_sims, k, ld, d, sigma, n_range, factor):
 
             dmm_hd = DMM_HD(k_est, ld_est, sigma)
             start_dmm = time.time()
-            v_rv_dmm = dmm_hd.estimate_ld(sample, factor)
+            v_rv_dmm = dmm_hd.estimate_ld(sample, factor_weights, factor_thetas)
             end_dmm = time.time()
 
             em = GaussianMixture(n_components= k, covariance_type = 'spherical',
@@ -83,11 +83,13 @@ d = 2
 num_sims = 5
 sigma = 0.5
 n_range = np.arange(1000, 2000, 100)
-factor = 20.0
+factor_weights = 10.0
+factor_thetas = 0.2
 
 
 sim_k2 = sim_over_n(num_sims=num_sims, k=2, ld=2, d=d,
-                    sigma=sigma, n_range=n_range, factor=factor)
+                    sigma=sigma, n_range=n_range,
+                    factor_weights=factor_weights, factor_thetas=factor_thetas)
 
 
 
@@ -111,7 +113,6 @@ plt.ylabel("Time")
 plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
 plt.savefig("sim_k2.pdf")
 plt.close()
-
 
 
 
