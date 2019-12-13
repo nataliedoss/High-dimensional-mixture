@@ -25,13 +25,19 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor_weights, factor_thet
 
     for i in range(len(d_range)):
         d = d_range[i]
-        # One type of mixing distribution:
+
+        # One model:
+        #x1 = np.repeat(1, d)
+        #x2 = np.repeat(-1, d)
+        #x = np.array((x1, x2))
+        #weights = np.repeat(1.0/k, k)
+        # One model:
         x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
-        # Another type of mixing distribution:
+        # One model:
         #x = np.asarray(random.choices([1, -1], k=k*d)).reshape(k, d)
-        # Another type of mixing distribution:
+        # One model:
         #x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k*d)).reshape(k, d)
-        
+
         weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
         # If you want the true model to be centered:
         #x_centered = x - np.average(x, axis=0, weights=weights)
