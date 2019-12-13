@@ -71,8 +71,8 @@ class DMM_HD():
 
         Args:
         num: Int. Number of samples in dataset.
-        factor: Int. Factor by which to multiply the rate. 
-            If > 1.0, makes grid finer, which may be desirable.
+        factor_weights: Float. Factor by which to multiply the rate. 
+            If > 1.0, makes grid finer.
         
         Returns:
         Array(float, L x k), where:
@@ -93,6 +93,8 @@ class DMM_HD():
 
         Args:
         num: Int. Number of samples in dataset.
+        factor_thetas: Float. factor by which to multiply the rate.
+            If > 1.0, makes grid finer.
 
         Returns:
         Array(float, (size of epsilon net in ld space) x ld).
@@ -112,6 +114,8 @@ class DMM_HD():
 
         Args:
         num: Int. Number of samples in dataset.
+        factor_thetas: Float. factor by which to multiply the rate.
+            If > 1.0, makes grid finer.
 
         Returns:
         Array(float, (size of epsilon net in ld space) x ld).
@@ -199,7 +203,6 @@ class DMM_HD():
         
         net_weights = self.generate_net_weights(num, factor_weights)
         net_thetas = self.generate_net_thetas(num, factor_thetas)
-        #nt = net_thetas.shape[1]
         nt = len(net_thetas)
 
         candidate_ests = self.generate_candidates(sample_ld, net_weights)
