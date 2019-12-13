@@ -14,7 +14,7 @@ import random
 
 ###############################################################
 # Simulation study: d varies
-def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor):
+def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor_weights, factor_thetas):
     k_est = k
     ld_est = ld
 
@@ -25,11 +25,12 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor):
 
     for i in range(len(d_range)):
         d = d_range[i]
-        #x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
-        # Or, for instance:
+        # One type of mixing distribution:
+        x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
+        # Another type of mixing distribution:
         #x = np.asarray(random.choices([1, -1], k=k*d)).reshape(k, d)
-        # Or, for instance:
-        x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k*d)).reshape(k, d)
+        # Another type of mixing distribution:
+        #x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k*d)).reshape(k, d)
         
         weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
         # If you want the true model to be centered:
@@ -44,7 +45,7 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor):
 
             dmm_hd = DMM_HD(k_est, ld_est, sigma)
             start_dmm = time.time()
-            v_rv_dmm = dmm_hd.estimate(sample, factor)
+            v_rv_dmm = dmm_hd.estimate(sample, factor_weights, factor_thetas)
             end_dmm = time.time()
 
             em = GaussianMixture(n_components= k, covariance_type = 'spherical',
@@ -77,24 +78,19 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor):
 
 
 
-
-
-
-
-
 ####################################################################
 # Run sim study
 num_sims = 10
 num = 10000
 sigma = 1.0
 d_range = np.arange(100, 1000, 100)
-factor = 20.0
+factor_weights = 5.0
+factor_thetas = 0.2
 
 
-sim_k2 = sim_over_d(num_sims=num_sims, k=2, ld=1, num=num,
-                    sigma=sigma, d_range=d_range, factor=factor)
-#sim_k3 = sim_over_d(num_sims=num_sims, k=3, ld=3, num=num,
-#                    sigma=sigma, d_range=d_range, factor=factor)
+sim_k2 = sim_over_d(num_sims=num_sims, k=2, ld=2, num=num,
+                    sigma=sigma, d_range=d_range,
+                    factor_weights=factor_weights, factor_thetas=factor_thetas)
 
 
 # Plots
@@ -119,27 +115,4 @@ plt.ylabel("Time")
 plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
 plt.savefig("sim_k2.pdf")
 plt.close()
-
-
-
-# k = 3
-# Accuracy
-#plt.subplot(1, 2, 1)
-#plt.plot()
-#p1 = plt.errorbar(d_range, sim_k3[0], sim_k3[1])
-#p2 = plt.errorbar(d_range, sim_k3[2], sim_k3[3])
-#plt.title("K = 3: Accuracy as d grows")
-#plt.xlabel("d")
-#plt.ylabel("Wasserstein-1")
-#plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
-# Time
-#plt.subplot(1, 2, 2)
-#p1 = plt.scatter(d_range, sim_k3[4])
-#p2 = plt.scatter(d_range, sim_k3[5])
-#plt.title("k = 3: Time as d grows")
-#plt.xlabel("d")
-#plt.ylabel("Time")
-#plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
-#plt.savefig("sim_k3.pdf")
-#plt.close()
 
