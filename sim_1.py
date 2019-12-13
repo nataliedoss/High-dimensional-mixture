@@ -38,7 +38,7 @@ def sim_over_n(num_sims, k, ld, d, sigma, n_range, factor_weights, factor_thetas
 
             dmm_hd = DMM_HD(k_est, ld_est, sigma)
             start_dmm = time.time()
-            v_rv_dmm = dmm_hd.estimate_ld(sample, factor_weights, factor_thetas)
+            v_rv_dmm = dmm_hd.estimate(sample, factor_weights, factor_thetas)
             end_dmm = time.time()
 
             em = GaussianMixture(n_components= k, covariance_type = 'spherical',
@@ -76,13 +76,12 @@ def sim_over_n(num_sims, k, ld, d, sigma, n_range, factor_weights, factor_thetas
 
 
 
-
 ####################################################################
 # Run sim study
-d = 2
-num_sims = 5
-sigma = 0.5
-n_range = np.arange(1000, 2000, 100)
+d = 500
+num_sims = 10
+sigma = 1.0
+n_range = np.arange(10000, 20000, 1000)
 factor_weights = 10.0
 factor_thetas = 0.2
 
@@ -113,7 +112,5 @@ plt.ylabel("Time")
 plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
 plt.savefig("sim_k2.pdf")
 plt.close()
-
-
 
 
