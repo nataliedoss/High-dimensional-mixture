@@ -21,11 +21,22 @@ def sim_over_n(num_sims, k, ld, d, sigma, n_range, factor_weights, factor_thetas
     time_mat_dmm = np.zeros(shape = (len(n_range), num_sims))
     time_mat_em = np.zeros(shape = (len(n_range), num_sims))
 
-    # A simple model:
-    x1 = np.repeat(1, d)
-    x2 = np.repeat(-1, d)
-    x = np.array((x1, x2))
-    weights = np.repeat(1.0/k, k)
+    # One model:
+    #x1 = np.repeat(1, d)
+    #x2 = np.repeat(-1, d)
+    #x = np.array((x1, x2))
+    #weights = np.repeat(1.0/k, k)
+    # One model:
+    x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
+    # One model:
+    #x = np.asarray(random.choices([1, -1], k=k*d)).reshape(k, d)
+    # One model:
+    #x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k*d)).reshape(k, d)
+    
+    weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
+    # If you want the true model to be centered:
+    #x_centered = x - np.average(x, axis=0, weights=weights)
+
     u_rv = DiscreteRV_HD(weights, x) # true model
     model = ModelGM_HD(w=weights, x=x, std=sigma)
     
@@ -78,11 +89,11 @@ def sim_over_n(num_sims, k, ld, d, sigma, n_range, factor_weights, factor_thetas
 
 ####################################################################
 # Run sim study
-d = 500
+d = 100
 num_sims = 10
 sigma = 1.0
 n_range = np.arange(10000, 20000, 1000)
-factor_weights = 10.0
+factor_weights = 5.0
 factor_thetas = 0.2
 
 
