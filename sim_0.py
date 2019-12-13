@@ -27,7 +27,9 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor):
         d = d_range[i]
         #x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
         # Or, for instance:
-        x = np.asarray(random.choices([1, -1], k=k*d)).reshape(k, d)
+        #x = np.asarray(random.choices([1, -1], k=k*d)).reshape(k, d)
+        # Or, for instance:
+        x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k*d)).reshape(k, d)
         
         weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
         # If you want the true model to be centered:
@@ -84,12 +86,12 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor):
 # Run sim study
 num_sims = 10
 num = 10000
-sigma = 0.5
+sigma = 1.0
 d_range = np.arange(100, 1000, 100)
 factor = 20.0
 
 
-sim_k2 = sim_over_d(num_sims=num_sims, k=2, ld=2, num=num,
+sim_k2 = sim_over_d(num_sims=num_sims, k=2, ld=1, num=num,
                     sigma=sigma, d_range=d_range, factor=factor)
 #sim_k3 = sim_over_d(num_sims=num_sims, k=3, ld=3, num=num,
 #                    sigma=sigma, d_range=d_range, factor=factor)
@@ -140,5 +142,4 @@ plt.close()
 #plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
 #plt.savefig("sim_k3.pdf")
 #plt.close()
-
 
