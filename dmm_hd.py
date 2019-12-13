@@ -65,7 +65,7 @@ class DMM_HD():
         return round((num)**(1.0/(4.0*self.k - 2.0)))
         
 
-    def generate_net_weights(self, num, factor):
+    def generate_net_weights(self, num, factor_weights):
         """
         Method to generate epsilon net on weights. Epsilon is rate.
 
@@ -75,17 +75,17 @@ class DMM_HD():
             If > 1.0, makes grid finer, which may be desirable.
         
         Returns:
-        Array(float, L x k). 
+        Array(float, L x k), where:
             L = (a+k-1) choose (k-1).
-            a = factor*rate_inverse.
+            a = factor_weights * rate_inverse.
         """
         
         rate_inverse = self.compute_rate_inverse(num)
-        return simplex_grid(self.k, factor*rate_inverse) / (factor*rate_inverse)
+        return simplex_grid(self.k, factor_weights * rate_inverse) / (factor_weights * rate_inverse)
 
 
 
-    def generate_net_thetas(self, num):
+    def generate_net_thetas(self, num, factor_thetas):
         """
         One method to generate epsilon net on unit vectors in ld space.
         This method generates "size" random Gaussian vectors in ld space and normalizes them. Approximate grid. 
@@ -104,7 +104,7 @@ class DMM_HD():
         return (thetas.T / np.apply_along_axis(np.linalg.norm, 1, thetas)).T
 
     
-    def generate_net_thetas(self, num):
+    def generate_net_thetas(self, num, factor_thetas):
         """
         One method to generate epsilon net on unit vectors in ld space.
         This method generates (1/epsilon) grid points in each direction in ld space, then takes all combinations.
@@ -118,9 +118,7 @@ class DMM_HD():
         """
 
         rate_inverse = self.compute_rate_inverse(num)
-        nt = rate_inverse**self.ld
-        nt = 2 # HACKY, BUT WE DON'T NEED MORE THAN THIS
-        grid_1d = np.arange(-1, 1.1, 1.0/nt)
+        grid_1d = np.arange(-1, 1.1, 1.0/(factor_thetas * rate_inverse))
         thetas = np.empty((len(grid_1d)**self.ld, self.ld))
         for i in range(len(grid_1d)):
             for j in range(len(grid_1d)):
@@ -185,7 +183,7 @@ class DMM_HD():
         return theta_ests
 
 
-    def estimate_ld(self, sample_ld, factor):
+    def estimate_ld(self, sample_ld, factor_weights, factor_thetas):
         """
         Method to perform the multivariate denoised method of moments, for any dimension ld.
 
@@ -199,9 +197,10 @@ class DMM_HD():
 
         num = len(sample_ld)
         
-        net_weights = self.generate_net_weights(num, factor)
-        net_thetas = self.generate_net_thetas(num)
-        nt = net_thetas.shape[1]
+        net_weights = self.generate_net_weights(num, factor_weights)
+        net_thetas = self.generate_net_thetas(num, factor_thetas)
+        #nt = net_thetas.shape[1]
+        nt = len(net_thetas)
 
         candidate_ests = self.generate_candidates(sample_ld, net_weights)
         theta_ests = self.generate_theta_ests(sample_ld, net_thetas)
@@ -225,7 +224,7 @@ class DMM_HD():
 
 
 
-    def estimate(self, sample, factor):
+    def estimate(self, sample, factor_weights, factor_thetas):
         """
         Method to perform the complete high dimensional DMM algorithm.
 
@@ -250,7 +249,7 @@ class DMM_HD():
             est = DiscreteRV_HD(est_ld.weights, est_centers)
 
         else:
-            est_ld = self.estimate_ld(sample_ld, factor)
+            est_ld = self.estimate_ld(sample_ld, factor_weights, factor_thetas)
             est = DiscreteRV_HD(est_ld.weights, np.matmul(est_ld.atoms, U_ld.T))
 
         return est
