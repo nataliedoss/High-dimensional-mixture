@@ -24,7 +24,8 @@ weights = np.repeat(1.0/k, k)
 u_rv = DiscreteRV_HD(weights, x) # truth
 num = 1000 # sample size
 sigma = 0.5
-factor = 20.0
+factor_weights = 20.0
+factor_thetas = 1.0
 
 
 # Generate a sample from this model.
@@ -40,7 +41,7 @@ plt.show()
 # Run the high dimensional DMM on this sample.
 alg = DMM_HD(k_est, ld_est, 1.0)
 start_dmm = time.time()
-v_rv = alg.estimate_ld(sample, factor)
+v_rv = alg.estimate_ld(sample, factor_weights, factor_thetas)
 end_dmm = time.time()
 print("The time to run HD DMM on this sample was", end_dmm-start_dmm)
 print("The error from HD DMM was", wass_hd(u_rv, v_rv))
@@ -75,8 +76,8 @@ S_centers = list(itertools.combinations(A, alg.k))
 
 
 # Define the nets and parameters to do sliced MoM
-net_weights = alg.generate_net_weights(num, factor)
-net_thetas = alg.generate_net_thetas(num)
+net_weights = alg.generate_net_weights(num, factor_weights)
+net_thetas = alg.generate_net_thetas(num, factor_thetas)
 rate_inverse = alg.compute_rate_inverse(num)
 nt = len(net_thetas)
 
@@ -85,11 +86,7 @@ nt = len(net_thetas)
 candidate_ests = alg.generate_candidates(sample, net_weights)
 theta_ests = alg.generate_theta_ests(sample, net_thetas)
 
-# In this example, something around 152 should be best
-best = 152
-candidate_ests[best].atoms
-candidate_ests[best].weights
-print(wass_hd(u_rv, candidate_ests[best]))
+
 
 # Check that this is indeed what we select
 candidate_ests_theta = [None] * len(candidate_ests) * nt
@@ -110,7 +107,6 @@ print(est_selected.atoms)
 print(est_selected.weights)
 
 # Whereas what you should have selected was:
-best = 152
 print(wass_hd(u_rv, est_selected))
 
 
