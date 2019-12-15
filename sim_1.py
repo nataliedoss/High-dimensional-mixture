@@ -22,20 +22,18 @@ def sim_over_n(num_sims, k, ld, d, sigma, n_range, factor_weights, factor_thetas
     time_mat_em = np.zeros(shape = (len(n_range), num_sims))
 
     # One model:
-    #x1 = np.repeat(1, d)
-    #x2 = np.repeat(-1, d)
+    #x1 = np.repeat(1/np.sqrt(d), d)
+    #x2 = np.repeat(-1/np/sqrt(d), d)
     #x = np.array((x1, x2))
     #weights = np.repeat(1.0/k, k)
     # One model:
     x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
     # One model:
-    #x = np.asarray(random.choices([1, -1], k=k*d)).reshape(k, d)
-    # One model:
     #x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k*d)).reshape(k, d)
     
     weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
     # If you want the true model to be centered:
-    #x_centered = x - np.average(x, axis=0, weights=weights)
+    x_centered = x - np.average(x, axis=0, weights=weights)
 
     u_rv = DiscreteRV_HD(weights, x) # true model
     model = ModelGM_HD(w=weights, x=x, std=sigma)
@@ -93,13 +91,13 @@ d = 100
 num_sims = 10
 sigma = 1.0
 n_range = np.arange(10000, 20000, 1000)
-factor_weights = 5.0
-factor_thetas = 0.2
+factor_weights = 4.0
+factor_thetas = 0.1
 
 
-sim_k2 = sim_over_n(num_sims=num_sims, k=2, ld=2, d=d,
-                    sigma=sigma, n_range=n_range,
-                    factor_weights=factor_weights, factor_thetas=factor_thetas)
+sim = sim_over_n(num_sims=num_sims, k=3, ld=2, d=d,
+                 sigma=sigma, n_range=n_range,
+                 factor_weights=factor_weights, factor_thetas=factor_thetas)
 
 
 
@@ -107,21 +105,21 @@ sim_k2 = sim_over_n(num_sims=num_sims, k=2, ld=2, d=d,
 # Accuracy
 plt.subplot(1, 2, 1)
 #plt.plot()
-p1 = plt.errorbar(n_range, sim_k2[0], sim_k2[1])
-p2 = plt.errorbar(n_range, sim_k2[2], sim_k2[3])
-plt.title("k = 2: Accuracy as n grows")
+p1 = plt.errorbar(n_range, sim[0], sim[1])
+p2 = plt.errorbar(n_range, sim[2], sim[3])
+plt.title("Accuracy as n grows")
 plt.xlabel("n")
 plt.ylabel("Wasserstein-1")
 plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
 # Time
 plt.subplot(1, 2, 2)
-p1 = plt.scatter(n_range, sim_k2[4])
-p2 = plt.scatter(n_range, sim_k2[5])
-plt.title("k = 2: Time as n grows")
+p1 = plt.scatter(n_range, sim[4])
+p2 = plt.scatter(n_range, sim[5])
+plt.title("Time as n grows")
 plt.xlabel("n")
-plt.ylabel("Time")
+plt.ylabel("Time in seconds")
 plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
-plt.savefig("sim_k2.pdf")
+plt.savefig("sim.pdf")
 plt.close()
 
 
