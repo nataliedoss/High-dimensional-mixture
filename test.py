@@ -24,8 +24,8 @@ weights = np.repeat(1.0/k, k)
 u_rv = DiscreteRV_HD(weights, x) # truth
 num = 1000 # sample size
 sigma = 0.5
-factor_weights = 20.0
-factor_thetas = 1.0
+factor_weights = 10.0
+factor_thetas = 0.2
 
 
 # Generate a sample from this model.
@@ -129,4 +129,24 @@ v_rv = DiscreteRV_HD((0.3, 0.7), (2, -1.2))
 # The following two should be the same:
 #print(wass(u_rv, v_rv))
 #print(wass_hd(u_rv, v_rv))
+
+
+
+
+#################################################################################
+# Check the time of DMM for k = 5
+d = 1
+k = 5
+num = 1000
+x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
+weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
+model = ModelGM_HD(w=weights, x=x, std=sigma)
+sample_d1 = sample_gm(model, k, num, d)
+sample = sample_d1[:,0]
+dmm = DMM(k, sigma=None)
+start_dmm = time.time()
+est = dmm.estimate(sample)
+end_dmm = time.time()
+print(end_dmm - start_dmm)
+
 
