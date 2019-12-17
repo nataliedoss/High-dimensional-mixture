@@ -83,12 +83,21 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor_weights, factor_thet
 
 ####################################################################
 # Run sim study
-num_sims = 10
-num = 10000
+num_sims = 5
+num = 20000
 sigma = 1.0
 d_range = np.arange(100, 1000, 100)
-factor_weights = 4.0
-factor_thetas = 0.1
+factor_weights = 1.0
+factor_thetas = 0.5
+
+# Quick check of size of theta_net
+dmm_hd = DMM_HD(3, 2, sigma)
+rate_inverse = dmm_hd.compute_rate_inverse(num)
+grid_1d = np.arange(-1, 1.1, 1.0/(factor_thetas * rate_inverse))
+net_weights = dmm_hd.generate_net_weights(num, factor_weights)
+print(rate_inverse)
+print(grid_1d)
+print(net_weights)
 
 
 sim = sim_over_d(num_sims=num_sims, k=3, ld=2, num=num,
@@ -96,8 +105,7 @@ sim = sim_over_d(num_sims=num_sims, k=3, ld=2, num=num,
                  factor_weights=factor_weights, factor_thetas=factor_thetas)
 
 
-# Plots
-
+# Plot
 
 # Accuracy
 plt.subplot(1, 2, 1)
@@ -118,4 +126,5 @@ plt.ylabel("Time in seconds")
 plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
 plt.savefig("sim.pdf")
 plt.close()
+
 
