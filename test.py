@@ -12,40 +12,66 @@ import matplotlib.pyplot as plt
 import time
 
 
+#################################################################################
+#
+
+
 # Set the model parameters.
 d = 2
-k = 2
+k = 3
 k_est = k
-ld_est = k_est 
-x1 = np.repeat(1, d)
-x2 = np.repeat(-1, d)
-x = np.array((x1, x2))
+ld_est = k-1
+sigma = 1.0
+
+# One model:
+x = np.zeros(k*d).reshape(k, d)
+# One model:
+#x = np.random.multivariate_normal(np.zeros(k*d), np.identity(k*d), 1).reshape(k, d)
+#for j in range(k):
+#    x[j, ] = x[j, ] / np.linalg.norm(x[j, ])
+# One model:
+#x1 = np.random.multivariate_normal(np.zeros(d), np.identity(d), 1)
+#x1 = x1 / np.apply_along_axis(np.linalg.norm, 1, x1)
+#x1 = x1.T
+#x1 = x1.reshape(d, )
+#x2 = -x1
+#x = np.array((x1, x2))
+# One model:
+#x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
+# One model:
+#x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k*d)).reshape(k, d)
+
 weights = np.repeat(1.0/k, k)
-u_rv = DiscreteRV_HD(weights, x) # truth
-num = 1000 # sample size
-sigma = 0.5
-factor_weights = 10.0
-factor_thetas = 0.2
+#weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
+# If you want the true model to be centered:
+#x_centered = x - np.average(x, axis=0, weights=weights)
 
-
-# Generate a sample from this model.
+u_rv = DiscreteRV_HD(weights, x) # true model
 model = ModelGM_HD(w=weights, x=x, std=sigma)
-sample = sample_gm(model, k, num, d)
 
+# Generate a sample
+num = 1000
+sample = sample_gm(model, k, num, d)
 
 # Plot the sample.
 plt.scatter(sample[:, 0], sample[:, 1])
 plt.show()
 
+# Algorithm parameters
+factor_weights = 1.0
+factor_thetas = 1.0
+
 
 # Run the high dimensional DMM on this sample.
 alg = DMM_HD(k_est, ld_est, 1.0)
 start_dmm = time.time()
-v_rv = alg.estimate_ld(sample, factor_weights, factor_thetas)
+mean_est = np.mean(sample, axis=0)
+sample = sample - mean_est
+v_rv = alg.estimate(sample, factor_weights, factor_thetas)
+v_rv.atoms = v_rv.atoms + mean_est
 end_dmm = time.time()
 print("The time to run HD DMM on this sample was", end_dmm-start_dmm)
 print("The error from HD DMM was", wass_hd(u_rv, v_rv))
-
 
 # Run EM on this sample.
 em = GaussianMixture(n_components = k, covariance_type = 'spherical',
@@ -58,6 +84,14 @@ print("The time to run EM on this sample was", end_em - start_em)
 print("The error from EM was", wass_hd(u_rv, v_rv_em))
 
 
+
+
+
+
+
+
+
+'''
 
 #################################################################################
 # Test some functions in the HD DMM algorithm
@@ -138,7 +172,7 @@ v_rv = DiscreteRV_HD((0.3, 0.7), (2, -1.2))
 d = 1
 k = 5
 num = 1000
-x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
+x = np.random.uniform(-1.0, 1.0, k*d).reshape(k, d)
 weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
 model = ModelGM_HD(w=weights, x=x, std=sigma)
 sample_d1 = sample_gm(model, k, num, d)
@@ -150,3 +184,4 @@ end_dmm = time.time()
 print(end_dmm - start_dmm)
 
 
+'''
