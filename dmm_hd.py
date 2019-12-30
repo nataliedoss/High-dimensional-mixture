@@ -88,8 +88,8 @@ class DMM_HD():
     def generate_net_thetas(self, num, factor_thetas):
         """
         One method to generate epsilon net on unit vectors in ld space.
-        This method generates "size" random Gaussian vectors in ld space and normalizes them. Approximate grid. 
-        The "size" of an epsilon net in ld space is (1/epsilon)^ld. Here epsilon is rate, so 1/epsilon is rate_inverse.
+        This method generates (1/epsilon)^ld random Gaussian vectors in ld space and normalizes them. Approximate grid. 
+        Here epsilon is the rate, so 1/epsilon is rate_inverse.
 
         Args:
         num: Int. Number of samples in dataset.
