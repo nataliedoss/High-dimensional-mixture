@@ -18,7 +18,7 @@ class ModelGM_HD:
     def __init__(self, w, x, std):
         """ 
         Initialize a GM model
-        w: Array(float, TK x TK). TK are the mixing distribution weights. 
+        w: Array(float, k x 1k). Entries are the mixing distribution weights. 
         x: Array(float, k x d). Rows are the mixing distribution centers.
         std: Float. Model standard deviation.
         """
