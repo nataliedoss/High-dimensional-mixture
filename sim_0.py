@@ -11,7 +11,6 @@ import random
 
 
 
-
 ###############################################################
 # Simulation study: d varies
 def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor_weights, factor_thetas):
@@ -25,31 +24,42 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor_weights, factor_thet
 
     for i in range(len(d_range)):
         d = d_range[i]
-
         # One model:
-        #x1 = np.repeat(1/np.sqrt(d), d)
-        #x2 = np.repeat(-1/np.sqrt(d), d)
+        x = np.zeros(k*d).reshape(k, d)
+        # One model:
+        #x = np.random.multivariate_normal(np.zeros(k*d), np.identity(k*d), 1).reshape(k, d)
+        #for j in range(k):
+        #    x[j, ] = x[j, ] / np.linalg.norm(x[j, ])
+        # One model:
+        #x1 = np.random.multivariate_normal(np.zeros(d), np.identity(d), 1)
+        #x1 = x1 / np.apply_along_axis(np.linalg.norm, 1, x1)
+        #x1 = x1.T
+        #x1 = x1.reshape(d, )
+        #x2 = -x1
         #x = np.array((x1, x2))
-        #weights = np.repeat(1.0/k, k)
         # One model:
-        x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
+        #x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
         # One model:
         #x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k*d)).reshape(k, d)
 
-        weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
+        weights = np.repeat(1.0/k, k)
+        #weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
         # If you want the true model to be centered:
-        x_centered = x - np.average(x, axis=0, weights=weights)
+        #x_centered = x - np.average(x, axis=0, weights=weights)
         
         u_rv = DiscreteRV_HD(weights, x) # true model
         model = ModelGM_HD(w=weights, x=x, std=sigma)
 
         for j in range(num_sims):
-            
+
             sample = sample_gm(model, k, num, d)
+            mean_est = np.mean(sample, axis=0)
+            sample = sample - mean_est
 
             dmm_hd = DMM_HD(k_est, ld_est, sigma)
             start_dmm = time.time()
             v_rv_dmm = dmm_hd.estimate(sample, factor_weights, factor_thetas)
+            v_rv_dmm.atoms = v_rv_dmm.atoms + mean_est
             end_dmm = time.time()
 
             em = GaussianMixture(n_components= k, covariance_type = 'spherical',
@@ -83,12 +93,12 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor_weights, factor_thet
 
 ####################################################################
 # Run sim study
-num_sims = 5
-num = 20000
+num_sims = 10
+num = 1000
 sigma = 1.0
-d_range = np.arange(100, 1000, 100)
+d_range = np.arange(10, 100, 10)
 factor_weights = 1.0
-factor_thetas = 0.5
+factor_thetas = 1.0
 
 # Quick check of size of theta_net
 dmm_hd = DMM_HD(3, 2, sigma)
@@ -100,7 +110,7 @@ print(grid_1d)
 print(net_weights)
 
 
-sim = sim_over_d(num_sims=num_sims, k=3, ld=2, num=num,
+sim = sim_over_d(num_sims=num_sims, k=2, ld=1, num=num,
                  sigma=sigma, d_range=d_range,
                  factor_weights=factor_weights, factor_thetas=factor_thetas)
 
@@ -126,5 +136,4 @@ plt.ylabel("Time in seconds")
 plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
 plt.savefig("sim.pdf")
 plt.close()
-
 
