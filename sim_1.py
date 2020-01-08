@@ -1,18 +1,20 @@
-from dmm_hd import DMM_HD
-from model_gm import ModelGM_HD, ModelGM, sample_gm
-from discrete_rv import DiscreteRV_HD, wass_hd
+from dmm_hd import *
+from model_gm import *
+from discrete_rv import *
+from em import *
 
 import numpy as np
 from sklearn.mixture import GaussianMixture
 import matplotlib.pyplot as plt
 import time
+import random
 
 
 
 
 ###############################################################
 # Simulation study: n varies
-def sim_over_n(num_sims, k, ld, d, sigma, n_range, factor_weights, factor_thetas):
+def sim_over_n(num_sims, k, ld, d, sigma, n_range, factor_weights, factor_thetas, niter_EM):
     k_est = k
     ld_est = ld
 
@@ -21,22 +23,41 @@ def sim_over_n(num_sims, k, ld, d, sigma, n_range, factor_weights, factor_thetas
     time_mat_dmm = np.zeros(shape = (len(n_range), num_sims))
     time_mat_em = np.zeros(shape = (len(n_range), num_sims))
 
-    # One model:
-    #x1 = np.repeat(1/np.sqrt(d), d)
-    #x2 = np.repeat(-1/np/sqrt(d), d)
+    # Standard normal model (no mixture):
+    #x = np.zeros(k*d).reshape(k, d)
+    # Unit sphere model:
+    #x = np.random.multivariate_normal(np.zeros(k*d), np.identity(k*d), 1).reshape(k, d)
+    #x = x / (np.apply_along_axis(np.linalg.norm, 1, x))[:, None]
+    # Symmetric unit sphere model (k = 2):
+    #x1 = np.random.multivariate_normal(np.zeros(d), np.identity(d), 1)
+    #x1 = (x1 / np.linalg.norm(x1)).reshape(d, )
+    #x1 = 2*x1
+    #x2 = -x1
     #x = np.array((x1, x2))
-    #weights = np.repeat(1.0/k, k)
-    # One model:
-    x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
-    # One model:
+
+    # Symmetric +-1 model
+    x1 = np.repeat(1/np.sqrt(d), d)
+    x2 = -x1
+    x3 = np.concatenate([np.repeat(1/np.sqrt(d), d/2), np.repeat(-1/np.sqrt(d), d/2)])
+    x = np.array((x1, x2, x3))
+    # Uniform between hypercube points model:
+    #x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
+    # Uniform on hypercube model:
     #x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k*d)).reshape(k, d)
-    
-    weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
+
+    weights = np.repeat(1.0/k, k)
+    #weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
     # If you want the true model to be centered:
-    x_centered = x - np.average(x, axis=0, weights=weights)
+    #x_centered = x - np.average(x, axis=0, weights=weights)
 
     u_rv = DiscreteRV_HD(weights, x) # true model
     model = ModelGM_HD(w=weights, x=x, std=sigma)
+
+    # Save a plot of the model:
+    sample_tmp = sample_gm(model, k, 1000, d)
+    plt.scatter(sample_tmp[:, 0], sample_tmp[:, 1])
+    plt.savefig("sample_tmp.pdf")
+    plt.close()
     
     for i in range(len(n_range)):
         num = n_range[i]
@@ -47,17 +68,36 @@ def sim_over_n(num_sims, k, ld, d, sigma, n_range, factor_weights, factor_thetas
 
             dmm_hd = DMM_HD(k_est, ld_est, sigma)
             start_dmm = time.time()
+            mean_est = np.mean(sample, axis=0)
+            sample = sample - mean_est
             v_rv_dmm = dmm_hd.estimate(sample, factor_weights, factor_thetas)
+            v_rv_dmm.atoms = v_rv_dmm.atoms + mean_est
             end_dmm = time.time()
 
-            em = GaussianMixture(n_components= k, covariance_type = 'spherical',
-                                 max_iter = 20, random_state = 1)
+ 
+            # Run EM with package
+            # The option for keeping cov same across clusters is "tied'
+            # But it seems like the algorithm will still estimate it
+            # And it won't be restricted to be spherical
+            # It doesn't seem possible to simply input the true covariance
+            
+            em = GaussianMixture(n_components=k, covariance_type='spherical',
+                                 max_iter=niter_EM, random_state=1)
             start_em = time.time()
             em.fit(sample)
             end_em = time.time()
             v_rv_em = DiscreteRV_HD(em.weights_, em.means_)
             end_em = time.time()
            
+            '''
+            # Run our EM implementation
+            start_em = time.time()
+            p, mu = em(sample, k, sigma=sigma, iter=niter_EM)
+            v_rv_em = DiscreteRV_HD(p, mu)
+            end_em = time.time()
+            '''
+
+            
             error_mat_dmm[i, j] = wass_hd(u_rv, v_rv_dmm)
             error_mat_em[i, j] = wass_hd(u_rv, v_rv_em)
             time_mat_dmm[i, j] = end_dmm - start_dmm
@@ -87,17 +127,34 @@ def sim_over_n(num_sims, k, ld, d, sigma, n_range, factor_weights, factor_thetas
 
 ####################################################################
 # Run sim study
-d = 100
+k = 3
+ld = k-1
+d = 2
 num_sims = 10
-sigma = 1.0
-n_range = np.arange(10000, 20000, 1000)
-factor_weights = 4.0
-factor_thetas = 0.1
+sigma = 0.2
+n_range = np.arange(10000, 100000, 10000)
+factor_weights = 1.0
+factor_thetas = 0.2
+niter_EM = 1000
+
+# Quick check of size of theta_net
+num_test = n_range[0]
+dmm_hd = DMM_HD(k, ld, sigma)
+rate_inverse = dmm_hd.compute_rate_inverse(num_test)
+grid_1d = np.arange(-1, 1.1, 1.0/(factor_thetas * rate_inverse))
+net_weights = dmm_hd.generate_net_weights(num_test, factor_weights)
+print(rate_inverse)
+print(grid_1d)
+print(net_weights)
 
 
-sim = sim_over_n(num_sims=num_sims, k=3, ld=2, d=d,
+# Run sim
+random.seed(1)
+sim = sim_over_n(num_sims=num_sims, k=k, ld=ld, d=d,
                  sigma=sigma, n_range=n_range,
-                 factor_weights=factor_weights, factor_thetas=factor_thetas)
+                 factor_weights=factor_weights,
+                 factor_thetas=factor_thetas,
+                 niter_EM=niter_EM)
 
 
 
@@ -119,7 +176,10 @@ plt.title("Time as n grows")
 plt.xlabel("n")
 plt.ylabel("Time in seconds")
 plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
+#plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.5, hspace=None)
+plt.tight_layout()
 plt.savefig("sim.pdf")
 plt.close()
+
 
 

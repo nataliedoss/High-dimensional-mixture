@@ -2,43 +2,46 @@
 # Script for testing 
 #################################################################################
 
-
 from dmm_hd import *
 from model_gm import *
 from discrete_rv import *
+from em import *
 
 from sklearn.mixture import GaussianMixture
 import matplotlib.pyplot as plt
 import time
+import random
 
 
 #################################################################################
-#
-
-
 # Set the model parameters.
+random.seed(211)
 d = 2
-k = 3
+k = 2
 k_est = k
 ld_est = k-1
-sigma = 1.0
+sigma = 0.2
 
-# One model:
-x = np.zeros(k*d).reshape(k, d)
-# One model:
-#x = np.random.multivariate_normal(np.zeros(k*d), np.identity(k*d), 1).reshape(k, d)
-#for j in range(k):
-#    x[j, ] = x[j, ] / np.linalg.norm(x[j, ])
-# One model:
+
+# Standard normal model (no mixture):
+#x = np.zeros(k*d).reshape(k, d)
+# Unit sphere model:
+x = np.random.multivariate_normal(np.zeros(k*d), np.identity(k*d), 1).reshape(k, d)
+x = x / (np.apply_along_axis(np.linalg.norm, 1, x))[:, None]
+# Symmetric unit sphere model (k = 2):
 #x1 = np.random.multivariate_normal(np.zeros(d), np.identity(d), 1)
-#x1 = x1 / np.apply_along_axis(np.linalg.norm, 1, x1)
-#x1 = x1.T
-#x1 = x1.reshape(d, )
+#x1 = (x1 / np.linalg.norm(x1)).reshape(d, )
 #x2 = -x1
+#x3 = np.repeat(0, d)
 #x = np.array((x1, x2))
-# One model:
+# Symmetric +-1 model
+#x1 = np.repeat(2, d)
+#x2 = -x1
+#x3 = np.repeat(0, d)
+#x = np.array((x1, x2))
+# Uniform between hypercube points model:
 #x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
-# One model:
+# Uniform on hypercube model::
 #x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k*d)).reshape(k, d)
 
 weights = np.repeat(1.0/k, k)
@@ -53,17 +56,28 @@ model = ModelGM_HD(w=weights, x=x, std=sigma)
 num = 1000
 sample = sample_gm(model, k, num, d)
 
+
 # Plot the sample.
 plt.scatter(sample[:, 0], sample[:, 1])
 plt.show()
 
+
+
 # Algorithm parameters
 factor_weights = 1.0
-factor_thetas = 1.0
+factor_thetas = 0.5
 
+# Testing grid size
+dmm_hd = DMM_HD(k_est, ld_est, sigma)
+rate_inverse = dmm_hd.compute_rate_inverse(num)
+grid_1d = np.arange(-1, 1.1, 1.0/(factor_thetas * rate_inverse))
+net_weights = dmm_hd.generate_net_weights(num, factor_weights)
+print(rate_inverse)
+print(grid_1d)
+print(net_weights)
 
-# Run the high dimensional DMM on this sample.
-alg = DMM_HD(k_est, ld_est, 1.0)
+# Run the high dimensional DMM on this sample
+alg = DMM_HD(k_est, ld_est, sigma)
 start_dmm = time.time()
 mean_est = np.mean(sample, axis=0)
 sample = sample - mean_est
@@ -73,7 +87,20 @@ end_dmm = time.time()
 print("The time to run HD DMM on this sample was", end_dmm-start_dmm)
 print("The error from HD DMM was", wass_hd(u_rv, v_rv))
 
-# Run EM on this sample.
+
+# Run our EM on this sample
+start_em = time.time()
+p, mu = em(sample, k, sigma=sigma, iter=1000)
+end_em = time.time()
+v_rv_em = DiscreteRV_HD(p, mu)
+print("The time to run EM on this sample was", end_em - start_em)
+print("The error from EM was", wass_hd(u_rv, v_rv_em))
+
+
+
+
+'''
+# Run EM package on this sample
 em = GaussianMixture(n_components = k, covariance_type = 'spherical',
                      max_iter = 100, random_state = 1)
 start_em = time.time()
@@ -82,10 +109,7 @@ end_em = time.time()
 v_rv_em = DiscreteRV_HD(em.weights_, em.means_)
 print("The time to run EM on this sample was", end_em - start_em)
 print("The error from EM was", wass_hd(u_rv, v_rv_em))
-
-
-
-
+'''
 
 
 
