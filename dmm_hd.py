@@ -149,7 +149,7 @@ class DMM_HD():
         nw = len(net_weights)
 
         for j in range(self.ld):
-            dmm = DMM(self.k, sigma=None)
+            dmm = DMM(self.k, self.sigma)
             est = dmm.estimate(sample_ld[:, j])
             mat_centers[:, j] = est.centers
 
@@ -180,7 +180,7 @@ class DMM_HD():
         theta_ests = [None] * len(net_thetas)
 
         for j in range(len(net_thetas)):
-            dmm = DMM(self.k, sigma=None)
+            dmm = DMM(self.k, self.sigma)
             est = dmm.estimate(sample_theta[:, j])
             theta_ests[j] = DiscreteRV_HD(est.weights, est.centers)
 
@@ -218,9 +218,9 @@ class DMM_HD():
                 candidate_ests_theta[(i * nt) + j] = DiscreteRV_HD(weights, atoms)
                 errors_candidate_ests[i, j] = wass_hd(candidate_ests_theta[(i * nt) + j], theta_ests[j])
 
-        avg_errors = np.mean(errors_candidate_ests, axis=1)
+        #avg_errors = np.mean(errors_candidate_ests, axis=1)
         # OR:
-        #avg_errors = np.max(errors_candidate_ests, axis=1)
+        avg_errors = np.max(errors_candidate_ests, axis=1)
         est_selected = candidate_ests[np.argmin(avg_errors)]
 
         return est_selected
@@ -245,7 +245,7 @@ class DMM_HD():
         sample_ld = np.matmul(sample, U_ld)
 
         if (self.ld == 1):
-            dmm = DMM(self.k, sigma=None)
+            dmm = DMM(self.k, self.sigma)
             sample_ld = sample_ld.reshape(num, )
             est_ld = dmm.estimate(sample_ld)
             est_centers = np.matmul(est_ld.centers.reshape(self.k, self.ld), U_ld.T)
