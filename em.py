@@ -32,6 +32,8 @@ def em(x, k, sigma, iter):
         ll_diff = np.abs((ll_new - ll_old)/ll_old)
         ll_old = ll_new
         i += 1
+
+    print("Number of iterations for EM was ", i, "llhood gap for EM was ", ll_diff)
         
     return p, mu
 
