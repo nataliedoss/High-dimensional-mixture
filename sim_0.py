@@ -27,32 +27,45 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor_weights, factor_thet
         d = d_range[i]
         # Standard normal model (no mixture):
         #x = np.zeros(k*d).reshape(k, d)
-        # Unit sphere model:
-        x = np.random.multivariate_normal(np.zeros(k*d), np.identity(k*d), 1).reshape(k, d)
-        x = x / (np.apply_along_axis(np.linalg.norm, 1, x))[:, None]
-        # Symmetric unit sphere model (k = 2):
-        #x1 = np.random.multivariate_normal(np.zeros(d), np.identity(d), 1)
-        #x1 = (x1 / np.linalg.norm(x1)).reshape(d, )
-        #x1 = 2*x1
-        #x2 = -x1
-        #x = np.array((x1, x2))
         
-        # Symmetric +-1 model
+        # Unit sphere model:
+        #x = np.random.multivariate_normal(np.zeros(k*d), np.identity(k*d), 1).reshape(k, d)
+        #x = x / (np.apply_along_axis(np.linalg.norm, 1, x))[:, None]
+
+        # Controllable unit sphere model
         #x1 = np.repeat(1/np.sqrt(d), d)
         #x2 = -x1
-        #x = np.array((x1, x2))
+        #x3 = np.concatenate([np.repeat(1/np.sqrt(d), d/2), np.repeat(-1/np.sqrt(d), d/2)])
+        #x = np.array((x1, x2, x3))
+        
+        # Symmetric unit sphere model (k = 2):
+        x1 = np.random.multivariate_normal(np.zeros(d), np.identity(d), 1)
+        x1 = (x1 / np.linalg.norm(x1)).reshape(d, )
+        x1 = 2*x1
+        x2 = -x1
+        x = np.array((x1, x2))
+        
         # Uniform between hypercube points model:
         #x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k*d).reshape(k, d)
+        
         # Uniform on hypercube model:
         #x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k*d)).reshape(k, d)
 
-        #weights = np.repeat(1.0/k, k)
-        weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
+        weights = np.repeat(1.0/k, k)
+        #weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
+        
         # If you want the true model to be centered:
         #x_centered = x - np.average(x, axis=0, weights=weights)
 
         u_rv = DiscreteRV_HD(weights, x) # true model
         model = ModelGM_HD(w=weights, x=x, std=sigma)
+
+
+        # Just for me, save a plot of the model for a single d
+        #sample_tmp = sample_gm(model, k, 100000, d)
+        #plt.scatter(sample_tmp[:, 0], sample_tmp[:, 1])
+        #plt.savefig("sample_tmp.pdf")
+        #plt.close()
 
         for j in range(num_sims):
 
@@ -62,8 +75,8 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor_weights, factor_thet
             dmm_hd = DMM_HD(k_est, ld_est, sigma)
             start_dmm = time.time()
             mean_est = np.mean(sample, axis=0)
-            sample = sample - mean_est
-            v_rv_dmm = dmm_hd.estimate(sample, factor_weights, factor_thetas)
+            sample_centered = sample - mean_est
+            v_rv_dmm = dmm_hd.estimate(sample_centered, factor_weights, factor_thetas)
             v_rv_dmm.atoms = v_rv_dmm.atoms + mean_est
             end_dmm = time.time()
 
@@ -113,12 +126,12 @@ def sim_over_d(num_sims, k, ld, num, sigma, d_range, factor_weights, factor_thet
 
 ####################################################################
 # Run sim study
-k = 3
+k = 2
 ld = k-1
-num = 10000
+num = 1000
 num_sims = 10
-sigma = 0.5
-d_range = np.arange(100, 500, 50)
+sigma = 1.0
+d_range = np.arange(5, 50, 5)
 factor_weights = 1.0
 factor_thetas = 0.2
 niter_EM = 1000
@@ -133,7 +146,7 @@ print(grid_1d)
 print(net_weights)
 
 # Run sim 
-random.seed(31)
+random.seed(3)
 sim = sim_over_d(num_sims=num_sims, k=k, ld=ld, num=num,
                  sigma=sigma, d_range=d_range,
                  factor_weights=factor_weights,
@@ -165,5 +178,4 @@ plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
 plt.tight_layout()
 plt.savefig("sim.pdf")
 plt.close()
-
 
