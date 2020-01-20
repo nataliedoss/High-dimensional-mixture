@@ -22,14 +22,13 @@ d = 2
 k = 3
 k_est = k
 ld_est = k-1
-sigma = 0.5
+sigma = 1.0
 factor_model = 1.0
 # Controllable unit sphere model
 x1 = np.repeat(1/np.sqrt(d), d)
 x1 = factor_model*x1
 x2 = -x1
-x3 = np.concatenate([np.repeat(1/np.sqrt(d), d/2), np.repeat(-1/np.sqrt(d), d/2)])
-x3 = factor_model*x3
+x3 = np.repeat(0, d)
 x = np.array((x1, x2, x3))
 weights = np.repeat(1.0/k, k)
 u_rv = DiscreteRV_HD(weights, x) # true model
@@ -59,8 +58,6 @@ v_rv.atoms = v_rv.atoms + mean_est
 end_dmm = time.time()
 print("The time to run HD DMM on this sample was", end_dmm-start_dmm)
 print("The error from HD DMM was", wass_hd(u_rv, v_rv))
-
-
 
 
 
