@@ -364,13 +364,14 @@ class DMM_HD():
             est_centers = np.matmul(est_ld.centers.reshape(self.k, self.ld), U_ld.T)
             est = DiscreteRV_HD(est_ld.weights, est_centers)
 
-        if (MLE):
-            est_ld = self.estimate_ld_mle(sample_ld)
-            est = DiscreteRV_HD(est_ld.weights, np.matmul(est_ld.atoms, U_ld.T))
 
         else:
-            est_ld = self.estimate_ld(sample_ld, factor_weights, factor_thetas)
-            est = DiscreteRV_HD(est_ld.weights, np.matmul(est_ld.atoms, U_ld.T))
+            if (MLE):
+                est_ld = self.estimate_ld_mle(sample_ld)
+                est = DiscreteRV_HD(est_ld.weights, np.matmul(est_ld.atoms, U_ld.T))
+            else:
+                est_ld = self.estimate_ld(sample_ld, factor_weights, factor_thetas)
+                est = DiscreteRV_HD(est_ld.weights, np.matmul(est_ld.atoms, U_ld.T))
 
         return est
 
