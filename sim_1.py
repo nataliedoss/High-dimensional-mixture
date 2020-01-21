@@ -34,7 +34,7 @@ def sim_over_n(num_sims, k, ld, d, factor_model, sigma, n_range,
     x1 = factor_model * x1
     x2 = -x1
     x3 = np.repeat(0, d)
-    x = np.array((x1, x2))
+    x = np.array((x1, x2, x3))
 
     # Controllable unit sphere model (k = 2 or k = 3):
     #x1 = np.repeat(1/np.sqrt(d), d)
@@ -64,6 +64,7 @@ def sim_over_n(num_sims, k, ld, d, factor_model, sigma, n_range,
 
     u_rv = DiscreteRV_HD(weights, x) # true model
     model = ModelGM_HD(w=weights, x=x, std=sigma)
+    
 
     # There is only one model for all the simulations; save it:
     np.savetxt("sim_csv/weights_" + name + ".csv", model.weights)
@@ -77,11 +78,8 @@ def sim_over_n(num_sims, k, ld, d, factor_model, sigma, n_range,
     
     for i in range(len(n_range)):
         num = n_range[i]
-        
         for j in range(num_sims):
-            
             sample = sample_gm(model, k, num, d)
-
             dmm_hd = DMM_HD(k_est, ld_est, sigma)
             start_dmm = time.time()
             mean_est = np.mean(sample, axis=0)
@@ -104,8 +102,7 @@ def sim_over_n(num_sims, k, ld, d, factor_model, sigma, n_range,
             v_rv_em = DiscreteRV_HD(em.weights_, em.means_)
             end_em = time.time()
             '''
-            
-           
+
             # Run our EM implementation
             start_em = time.time()
             p, mu = em(sample, k, sigma, max_iter_EM, tol_EM)
@@ -113,14 +110,14 @@ def sim_over_n(num_sims, k, ld, d, factor_model, sigma, n_range,
             end_em = time.time()
             
 
-            '''
+            '''            
             # Run our symmetric, 2-GM EM implementation
             start_em = time.time()
             mu = em_symm(sample, sigma, max_iter_EM, tol_EM)
             end_em = time.time()
             v_rv_em = DiscreteRV_HD(weights, mu) # Plug in the true weights, which must be (1/2, 1/2)
             '''
-
+            
             
             error_mat_dmm[i, j] = wass_hd(u_rv, v_rv_dmm)
             error_mat_em[i, j] = wass_hd(u_rv, v_rv_em)
@@ -159,18 +156,18 @@ def sim_over_n(num_sims, k, ld, d, factor_model, sigma, n_range,
 
 ####################################################################
 # Run sim study
-k = 2
+k = 3
 ld = k-1
 d = 100
 factor_model = 0
 num_sims = 10
 sigma = 1
-n_range = np.arange(1000, 10000, 1000)
+n_range = np.arange(10000, 200000, 10000)
 factor_weights = 1
 factor_thetas = 4
 MLE = False
 max_iter_EM = 1000
-tol_EM = .0001
+tol_EM = .000001
 name = "k" + str(k) + "_d" + str(d) + "_factormodel" + str(factor_model) + "_weightseven" + "_sigma" + str(sigma) +  "_factorweights" + str(factor_weights) +  "_factorthetas" + str(factor_thetas)
 
 
@@ -184,12 +181,14 @@ print(rate_inverse)
 print(net_weights)
 print(net_thetas.shape)
 print(net_thetas)
+plt.scatter(net_thetas[:, 0], net_thetas[:, 1])
+plt.show()
 
 
 
 
 # Run sim
-random.seed(11)
+random.seed(3)
 sim = sim_over_n(num_sims=num_sims, k=k, ld=ld, d=d, factor_model=factor_model, 
                  sigma=sigma, n_range=n_range,
                  factor_weights=factor_weights,
