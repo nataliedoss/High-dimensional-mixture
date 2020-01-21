@@ -20,11 +20,9 @@ import random
 random.seed(2)
 d = 2
 k = 3
-k_est = k
-ld_est = k-1
+ld = k-1
 sigma = 1.0
-factor_model = 1.0
-# Controllable unit sphere model
+factor_model = 0
 x1 = np.repeat(1/np.sqrt(d), d)
 x1 = factor_model*x1
 x2 = -x1
@@ -37,18 +35,19 @@ model = ModelGM_HD(w=weights, x=x, std=sigma)
 num = 10000
 sample = sample_gm(model, k, num, d)
 
+
 # Plot the sample.
 plt.scatter(sample[:, 0], sample[:, 1])
 plt.show()
 
 # Algorithm parameters
-factor_weights = 1.0
-factor_thetas = 4.0
+factor_weights = 1
+factor_thetas = 5
 max_iter_EM = 1000
-tol_EM = .0001
+tol_EM = .000001
 
 # Run the high dimensional DMM on this sample
-alg = DMM_HD(k_est, ld_est, sigma)
+alg = DMM_HD(k, ld, sigma)
 print(alg.generate_net_thetas(num, factor_thetas))
 start_dmm = time.time()
 mean_est = np.mean(sample, axis=0)
@@ -58,6 +57,28 @@ v_rv.atoms = v_rv.atoms + mean_est
 end_dmm = time.time()
 print("The time to run HD DMM on this sample was", end_dmm-start_dmm)
 print("The error from HD DMM was", wass_hd(u_rv, v_rv))
+
+
+
+# Check a few things:
+U_ld = alg.estimate_center_space(sample_centered)
+sample_ld = np.matmul(sample_centered, U_ld)
+
+mat_centers = np.empty(shape = (alg.k, alg.ld))
+for j in range(alg.ld):
+    dmm = DMM(alg.k, alg.sigma)
+    est = dmm.estimate(sample_ld[:, j])
+    mat_centers[:, j] = est.centers
+
+
+
+plt.scatter(sample_ld[:, 0], sample_ld[:, 1])
+plt.show()
+
+tmp = alg.estimate_ld(sample_ld, factor_weights, factor_thetas)
+print(mat_centers)
+print(tmp.atoms)
+print(tmp.weights)
 
 
 
