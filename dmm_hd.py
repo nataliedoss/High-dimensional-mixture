@@ -112,6 +112,7 @@ class DMM_HD():
         """
         One method to generate epsilon net on unit vectors in ld space.
         This method generates (1/epsilon) grid points in each direction in ld space, then takes all combinations.
+        This method leads to a net of size exponential in ld instead of ld-1.
         BUT this method only works for self.ld = 2. 
 
         Args:
