@@ -103,6 +103,8 @@ def sample_gm(model, k, num, d):
 
     Returns:
     samples from multivariate Gaussian mixture model: Array(float, num x d).
+
+    Note: if model.centers has more than k centers, you will sample from the first k of those.
     """
     idx = np.random.choice(k, size=num, replace=True, p=model.weights)
     return model.centers[idx] + model.sigma * np.random.multivariate_normal(np.zeros(d), np.identity(d), num)
