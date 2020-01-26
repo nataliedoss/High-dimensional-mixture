@@ -82,7 +82,8 @@ class DMM_HD():
         """
         
         rate_inverse = self.compute_rate_inverse(num)
-        return simplex_grid(self.k, factor_weights * rate_inverse) / (factor_weights * rate_inverse)
+        return simplex_grid(self.k, factor_weights * rate_inverse) # If you use your simplex_grid function
+        #return simplex_grid(self.k, factor_weights * rate_inverse) / (factor_weights * rate_inverse) # If you use the Oyama simplex_grid function
 
 
     '''
@@ -378,6 +379,27 @@ class DMM_HD():
 
 
 
+def simplex_grid(k, size):
+    """
+    Method to construct a grid on the unit (k-1) dimensional simplex. 
+
+    Args:
+    k: Scalar(int). Dimension of simplex is k-1.
+    size: Scalar(int). Size along each coordinate (inverse fineness of simplex). 
+
+    Returns:
+    Array(float, L x k). L = number of vectors in simplex grid. 
+    """
+        
+    grid_1d = np.linspace(0.0, 1.0, size+1) # Include endpoints
+    grid = [] # Bad to append like this
+    for i in range(len(grid_1d)):
+        for j in range(len(grid_1d) - i):
+            grid.append(np.array((grid_1d[i], grid_1d[j], 1 - grid_1d[i] - grid_1d[j])))
+    return np.asarray(grid)
+
+
+'''
 def simplex_grid(m, n):
     """
     Method to construct a grid on the unit (m-1) dimensional simplex. 
@@ -419,7 +441,7 @@ def simplex_grid(m, n):
     return out
 
 
-
+'''
 
 
 
