@@ -140,14 +140,14 @@ def sim_over_n(num_sims, k, ld, d, factor_model, sigma, n_range,
     time_mean_em = np.mean(time_mat_em, axis = 1)
     time_sd_em = np.std(time_mat_em, axis = 1)
 
-    np.savetxt("sim_csv/dmmerrormean" + name + ".csv", error_mean_dmm)
-    np.savetxt("sim_csv/dmmerrorsd" + name + ".csv", error_sd_dmm)
-    np.savetxt("sim_csv/emerrormean" + name + ".csv", error_mean_em)
-    np.savetxt("sim_csv/emerrorsd" + name + ".csv", error_sd_em)
-    np.savetxt("sim_csv/dmmtimemean" + name + ".csv", time_mean_dmm)
-    np.savetxt("sim_csv/dmmtimesd" + name + ".csv", time_sd_dmm)
-    np.savetxt("sim_csv/emtimemean" + name + ".csv", time_mean_em)
-    np.savetxt("sim_csv/emtimesd" + name + ".csv", time_sd_dmm)
+    np.savetxt("sim_csv/dmmerrormean_" + name + ".csv", error_mean_dmm)
+    np.savetxt("sim_csv/dmmerrorsd_" + name + ".csv", error_sd_dmm)
+    np.savetxt("sim_csv/emerrormean_" + name + ".csv", error_mean_em)
+    np.savetxt("sim_csv/emerrorsd_" + name + ".csv", error_sd_em)
+    np.savetxt("sim_csv/dmmtimemean_" + name + ".csv", time_mean_dmm)
+    np.savetxt("sim_csv/dmmtimesd_" + name + ".csv", time_sd_dmm)
+    np.savetxt("sim_csv/emtimemean_" + name + ".csv", time_mean_em)
+    np.savetxt("sim_csv/emtimesd_" + name + ".csv", time_sd_dmm)
 
     return([error_mean_dmm, error_sd_dmm, error_mean_em, error_sd_em,
             time_mean_dmm, time_sd_dmm, time_mean_em, time_sd_em])
@@ -159,7 +159,7 @@ def sim_over_n(num_sims, k, ld, d, factor_model, sigma, n_range,
 k = 3
 ld = k-1
 d = 100
-factor_model = 0
+factor_model = 2
 num_sims = 10
 sigma = 1
 n_range = np.arange(10000, 200000, 10000)
@@ -168,7 +168,7 @@ factor_thetas = 4
 MLE = False
 max_iter_EM = 1000
 tol_EM = .000001
-name = "k" + str(k) + "_d" + str(d) + "_factormodel" + str(factor_model) + "_weightseven" + "_sigma" + str(sigma) +  "_factorweights" + str(factor_weights) +  "_factorthetas" + str(factor_thetas)
+name = "k" + str(k) + "_d" + str(d) + "_factormodel" + str(factor_model) + "_weightseven" + "_sigma" + str(sigma) +  "_factorweights" + str(factor_weights) +  "_factorthetas" + str(factor_thetas) 
 
 
 # Quick check of size of theta_net
@@ -200,20 +200,28 @@ sim = sim_over_n(num_sims=num_sims, k=k, ld=ld, d=d, factor_model=factor_model,
 
 
 # Plots
-
+SMALL_SIZE = 14
+MEDIUM_SIZE = 20
 # Accuracy
 plt.plot()
 p1 = plt.errorbar(n_range/1000, sim[0], sim[1])
 p2 = plt.errorbar(n_range/1000, sim[2], sim[3])
 plt.ylim(0.0, 1.0)
-plt.title("Accuracy as n grows")
+#plt.title("Accuracy as n grows")
 plt.xlabel("n/1000")
 plt.ylabel("Wasserstein-1")
+plt.rc('font', size=SMALL_SIZE) 
+plt.rc('axes', titlesize=SMALL_SIZE)     
+plt.rc('axes', labelsize=SMALL_SIZE)    
+#plt.rc('xtick', labelsize=SMALL_SIZE)    
+#plt.rc('ytick', labelsize=SMALL_SIZE)   
+plt.rc('legend', fontsize=MEDIUM_SIZE)    
 plt.legend((p1, p2), ("DMM", "EM"), loc='upper right', shadow=True)
 plt.savefig("sim_overn_" + name + "_mean.pdf")
 plt.close()
+
 # Time
-plt.plot
+plt.plot()
 p1 = plt.scatter(n_range/1000, sim[4])
 p2 = plt.scatter(n_range/1000, sim[6])
 plt.title("Time as n grows")
@@ -268,5 +276,4 @@ p1.errorbar(n_range/1000, sim[2], sim[3])
 #p1.legend(p1, ("DMM", "EM"), loc='upper left', shadow=True)
 f.savefig("temp.pdf")
 '''
-
 
