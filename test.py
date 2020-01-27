@@ -22,7 +22,7 @@ d = 2
 k = 3
 ld = k-1
 sigma = 1.0
-factor_model = 1
+factor_model = 2
 x1 = np.repeat(1/np.sqrt(d), d)
 x1 = factor_model*x1
 x2 = -x1
@@ -60,10 +60,12 @@ print("The error from HD DMM was", wass_hd(u_rv, v_rv))
 print(v_rv.weights)
 
 
-# Quick check of size of weights net
-#rate_inverse = alg.compute_rate_inverse(num)
-#print(alg.generate_net_weights(num, factor_weights))
-
+'''
+# A test
+rate_inverse = alg.compute_rate_inverse(num)
+net_weights = alg.generate_net_weights(num, factor_weights)
+tmp = alg.generate_candidates(sample, net_weights)
+'''
 
 
 #################################################################################
@@ -90,23 +92,25 @@ print(wass_hd(u_rv, v_rv))
 '''
 
 
-'''
 #################################################################################
 # Check the time of one-dim DMM for k = 5
+'''
 d = 1
 k = 5
+interval = 1
+sigma = 1.0
 num = 1000
 x = np.random.uniform(-1.0, 1.0, k*d).reshape(k, d)
 weights = np.random.dirichlet(np.repeat(1.0, k), 1).reshape(k, )
 model = ModelGM_HD(w=weights, x=x, std=sigma)
 sample_d1 = sample_gm(model, k, num, d)
 sample = sample_d1[:,0]
-dmm = DMM(k, sigma=None)
-start_dmm = time.time()
-est = dmm.estimate(sample)
-end_dmm = time.time()
-print(end_dmm - start_dmm)
+dmm = DMM(k=5, sigma=1)
 '''
+
+
+
+
 
 
 '''
