@@ -206,7 +206,7 @@ class DMM_HD():
         nw = len(net_weights)
 
         for j in range(self.ld):
-            dmm = DMM(self.k, self.sigma)
+            dmm = DMM(k=self.k, sigma=self.sigma)
             est = dmm.estimate(sample_ld[:, j])
             mat_centers[:, j] = est.centers
 
@@ -236,7 +236,7 @@ class DMM_HD():
         mat_centers = np.empty(shape = (self.k, self.ld))
         n, d = sample_ld.shape
         for j in range(self.ld):
-            dmm = DMM(self.k, self.sigma)
+            dmm = DMM(k=self.k, sigma=self.sigma)
             est = dmm.estimate(sample_ld[:, j])
             mat_centers[:, j] = est.centers
 
@@ -271,7 +271,7 @@ class DMM_HD():
         theta_ests = [None] * len(net_thetas)
 
         for j in range(len(net_thetas)):
-            dmm = DMM(self.k, self.sigma)
+            dmm = DMM(k=self.k, sigma=self.sigma)
             est = dmm.estimate(sample_theta[:, j])
             theta_ests[j] = DiscreteRV_HD(est.weights, est.centers)
 
@@ -360,7 +360,7 @@ class DMM_HD():
         sample_ld = np.matmul(sample, U_ld)
 
         if (self.ld == 1):
-            dmm = DMM(self.k, self.sigma)
+            dmm = DMM(k=self.k, sigma=self.sigma)
             sample_ld = sample_ld.reshape(num, )
             est_ld = dmm.estimate(sample_ld)
             est_centers = np.matmul(est_ld.centers.reshape(self.k, self.ld), U_ld.T)
