@@ -61,7 +61,7 @@ class DMM():
         """
         estimate a model from given samples
         use two-step estimate:
-        1.(a) preliminary estimation with identity weight matrix
+        1.(a) prelimnary estimation with identity weight matrix
           (b) estimation of optimal weight matrix (require all samples)
         2.    reestimate parameters using esimated weight matrix
 
