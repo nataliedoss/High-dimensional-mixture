@@ -1,5 +1,5 @@
 # High-dimensional-mixture
-This is a Python3 implementation of the spectral sliced method of moments algorithm for estimating the mixing distribution in a high-dimensional Gaussian mixture as described in [Optimal estimation of high-dimensional Gaussian mixtures](https://arxiv.org/abs/2002.05818). The algorithm builds on the one dimensional [Denoised method of moments algorithm](https://arxiv.org/abs/1807.07237). This code builds on the [implementation](https://github.com/Albuso0/mixture) of the one dimensional algorithm.
+This is a Python3 implementation of the spectral sliced method of moments algorithm for estimating the mixing distribution in a high-dimensional Gaussian mixture as described in [Optimal estimation of high-dimensional Gaussian mixtures](https://arxiv.org/abs/2002.05818). This code builds on the [implementation](https://github.com/Albuso0/mixture) of the one-dimensional [Denoised method of moments algorithm](https://arxiv.org/abs/1807.07237).
 
 A sample script to test the algorithm is below.
 
