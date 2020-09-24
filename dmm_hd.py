@@ -310,10 +310,8 @@ class DMM_HD():
                 candidate_ests_theta[(i * nt) + j] = DiscreteRV_HD(weights, atoms)
                 errors_candidate_ests[i, j] = wass_hd(candidate_ests_theta[(i * nt) + j], theta_ests[j])
 
-        #avg_errors = np.mean(errors_candidate_ests, axis=1)
-        # OR:
-        avg_errors = np.max(errors_candidate_ests, axis=1)
-        est_selected = candidate_ests[np.argmin(avg_errors)]
+        max_error = np.max(errors_candidate_ests, axis=1)
+        est_selected = candidate_ests[np.argmin(max_errors)]
 
         return est_selected
 
