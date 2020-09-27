@@ -13,6 +13,8 @@ A sample script to test the algorithm is below.
 
 [POT](https://pot.readthedocs.io/en/stable/)
 
+[itertools](https://docs.python.org/3/library/itertools.html)
+
 ## Example:
 
 ```
