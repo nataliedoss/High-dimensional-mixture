@@ -32,7 +32,6 @@ def sim_over_n(num_sims, k0, k, ld, d, factor_model, sigma, n_range,
     x = np.zeros(k0*d).reshape(k0, d)
     '''
 
-    '''
     # Symmetric unit sphere model (k0 = 2 or k0 = 3):
     x1 = np.random.multivariate_normal(np.zeros(d), np.identity(d), 1)
     x1 = (x1 / np.linalg.norm(x1)).reshape(d, )
@@ -40,7 +39,6 @@ def sim_over_n(num_sims, k0, k, ld, d, factor_model, sigma, n_range,
     x2 = -x1
     x3 = np.repeat(0, d)
     x = np.array((x1, x2))
-    '''
 
     '''
     # Controllable unit sphere model (k0 = 2 or k0 = 3):
@@ -51,11 +49,13 @@ def sim_over_n(num_sims, k0, k, ld, d, factor_model, sigma, n_range,
     x3 = factor_model * x3
     x = np.array((x1, x2, x3))
     '''
-    
+
+    '''
     # Unit sphere model:
     x = np.random.multivariate_normal(np.zeros(k0*d), np.identity(k0*d), 1).reshape(k0, d)
     x = x / (np.apply_along_axis(np.linalg.norm, 1, x))[:, None]
     x = factor_model * x
+    '''
 
     '''
     # Uniform between hypercube points model:
@@ -67,9 +67,9 @@ def sim_over_n(num_sims, k0, k, ld, d, factor_model, sigma, n_range,
     x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k0*d)).reshape(k0, d)
     '''
 
-    #weights = np.repeat(1.0/k0, k0)
+    weights = np.repeat(1.0/k0, k0)
     #weights = np.array((0.25, 0.75))
-    weights = np.random.dirichlet(np.repeat(1.0, k0), 1).reshape(k0, )
+    #weights = np.random.dirichlet(np.repeat(1.0, k0), 1).reshape(k0, )
     
     # If you want the true model to be centered:
     #x_centered = x - np.average(x, axis=0, weights=weights)
@@ -171,11 +171,11 @@ def sim_over_n(num_sims, k0, k, ld, d, factor_model, sigma, n_range,
 ####################################################################
 # Run sim study
 k0 = 2
-k = 2
+k = 3
 ld = k-1
 d = 100
 factor_model = 2
-num_sims = 2
+num_sims = 10
 sigma = 1
 n_range = np.arange(10000, 200000, 10000)
 factor_weights = 1
@@ -217,12 +217,14 @@ sim = sim_over_n(num_sims=num_sims, k0=k0, k=k, ld=ld,
 
 SMALL_SIZE = 14
 MEDIUM_SIZE = 20
+linewidth = 3
 # Accuracy
 plt.plot()
-p1 = plt.errorbar(n_range/1000, sim[0], sim[1])
-p2 = plt.errorbar(n_range/1000, sim[2], sim[3])
+p1 = plt.errorbar(n_range/1000, sim[0], sim[1],
+                  linewidth=linewidth, linestyle='-')
+p2 = plt.errorbar(n_range/1000, sim[2], sim[3],
+                  linewidth=linewidth, linestyle='--')
 plt.ylim(0.0, 1.0)
-#plt.title("Accuracy as n grows")
 plt.xlabel("n/1000")
 plt.ylabel("Wasserstein-1")
 plt.rc('font', size=SMALL_SIZE) 
