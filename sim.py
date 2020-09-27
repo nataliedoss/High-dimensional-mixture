@@ -173,11 +173,11 @@ def sim_over_n(num_sims, k0, k, ld, d, factor_model, sigma, n_range,
 k0 = 2
 k = 3
 ld = k-1
-d = 100
+d = 10
 factor_model = 2
 num_sims = 10
 sigma = 1
-n_range = np.arange(10000, 200000, 10000)
+n_range = np.arange(100, 2000, 100)
 factor_weights = 1
 factor_thetas = 4
 MLE = False
@@ -237,7 +237,7 @@ plt.legend((p1, p2), ("DMM", "EM"), loc='upper right', shadow=True)
 plt.savefig("sim_overn_" + name + "_mean.pdf")
 plt.close()
 
-
+'''
 # Time
 plt.plot()
 p1 = plt.scatter(n_range/1000, sim[4])
@@ -249,6 +249,6 @@ plt.legend((p1, p2), ("DMM", "EM"), loc='upper left', shadow=True)
 plt.tight_layout()
 plt.savefig("sim_overn_" + name + "_time.pdf")
 plt.close()
-
+'''
 
 
