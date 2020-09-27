@@ -21,7 +21,7 @@ class DiscreteRV_HD:
     
     def __init__(self, w, x):
         """
-        w: Array(float, TK x TK). Discrete distribution weights.
+        w: Array(float, k x 0). Discrete distribution weights.
         x: Array(float, k x d). Discrete distribution atoms. 
         """
         

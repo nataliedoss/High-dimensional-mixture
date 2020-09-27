@@ -14,13 +14,13 @@ import random
 
 
 
-
 #################################################################################
 # Set the model parameters.
 random.seed(2)
-d = 2
+d = 10
+k0 = 3
 k = 3
-ld = k-1
+ld = min(k-1, d)
 sigma = 1.0
 factor_model = 2
 x1 = np.repeat(1/np.sqrt(d), d)
@@ -28,12 +28,12 @@ x1 = factor_model*x1
 x2 = -x1
 x3 = np.repeat(0, d)
 x = np.array((x1, x2, x3))
-weights = np.repeat(1.0/k, k)
+weights = np.repeat(1.0/k0, k0)
 u_rv = DiscreteRV_HD(weights, x) # true model
 model = ModelGM_HD(w=weights, x=x, std=sigma)
 # Generate a sample
 num = 10000
-sample = sample_gm(model, k, num, d)
+sample = sample_gm(model, k0, num, d)
 
 
 # Plot the sample.
@@ -42,13 +42,14 @@ plt.show()
 
 # Algorithm parameters
 factor_weights = 1
-factor_thetas = 4
+factor_thetas = 10
 max_iter_EM = 1000
 tol_EM = .000001
 
 # Run the high dimensional DMM on this sample
 alg = DMM_HD(k, ld, sigma)
 print(alg.generate_net_thetas(num, factor_thetas))
+#print(alg.generate_net_weights(num, factor_thetas))
 start_dmm = time.time()
 mean_est = np.mean(sample, axis=0)
 sample_centered = sample - mean_est
@@ -58,6 +59,7 @@ end_dmm = time.time()
 print("The time to run HD DMM on this sample was", end_dmm-start_dmm)
 print("The error from HD DMM was", wass_hd(u_rv, v_rv))
 print(v_rv.weights)
+
 
 
 '''
@@ -71,13 +73,17 @@ tmp = alg.generate_candidates(sample, net_weights)
 #################################################################################
 # What causes slowness of HD DMM
 
-    
+# Example:
 # When k = 3, there are (9 choose 6) candidate estimates
 # And a weights net of size 6
 # Total number of candidate estimates is 504.
-# Computing W_1 distance for each of these against each projected estimate is
-# what causes algorithm slowness.
-# It's not anything else (wass_hd isn't slow, etc, I checked).
+# Algorithm slowness is from computing W_1 distance for each of these against each projected estimate.
+
+# Another example:
+# When k = 4 and ld = 3, there are (64 choose 4) candidate estimates.
+# And a weights net of size 10.
+# Total number of candidates is 6353760.
+# The algorithm becomes computationally infeasible.
 
 
 

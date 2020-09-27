@@ -12,9 +12,8 @@ import matplotlib.pyplot as plt
 
 
 
-
 # In this code, k0 is the true number of components in the model while k is our guess of the number of components.
-# This is corresponds to the paper notation. 
+# This corresponds to the paper notation. 
 
 
 ###############################################################
@@ -28,9 +27,12 @@ def sim_over_n(num_sims, k0, k, ld, d, factor_model, sigma, n_range,
     time_mat_dmm = np.zeros(shape = (len(n_range), num_sims))
     time_mat_em = np.zeros(shape = (len(n_range), num_sims))
 
+    '''
     # Standard normal model (no mixture):
-    #x = np.zeros(k0*d).reshape(k0, d)
+    x = np.zeros(k0*d).reshape(k0, d)
+    '''
 
+    '''
     # Symmetric unit sphere model (k0 = 2 or k0 = 3):
     x1 = np.random.multivariate_normal(np.zeros(d), np.identity(d), 1)
     x1 = (x1 / np.linalg.norm(x1)).reshape(d, )
@@ -38,29 +40,36 @@ def sim_over_n(num_sims, k0, k, ld, d, factor_model, sigma, n_range,
     x2 = -x1
     x3 = np.repeat(0, d)
     x = np.array((x1, x2))
+    '''
 
+    '''
     # Controllable unit sphere model (k0 = 2 or k0 = 3):
-    #x1 = np.repeat(1/np.sqrt(d), d)
-    #x1 = factor_model * x1
-    #x2 = -x1
-    #x3 = np.concatenate([np.repeat(1/np.sqrt(d), d/2), np.repeat(-1/np.sqrt(d), d/2)])
-    #x3 = factor_model * x3
-    #x = np.array((x1, x2, x3))
+    x1 = np.repeat(1/np.sqrt(d), d)
+    x1 = factor_model * x1
+    x2 = -x1
+    x3 = np.concatenate([np.repeat(1/np.sqrt(d), d/2), np.repeat(-1/np.sqrt(d), d/2)])
+    x3 = factor_model * x3
+    x = np.array((x1, x2, x3))
+    '''
     
     # Unit sphere model:
-    #x = np.random.multivariate_normal(np.zeros(k0*d), np.identity(k0*d), 1).reshape(k0, d)
-    #x = x / (np.apply_along_axis(np.linalg.norm, 1, x))[:, None]
-    #x = factor_model * x
-    
-    # Uniform between hypercube points model:
-    #x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k0*d).reshape(k0, d)
-    
-    # Uniform on hypercube model:
-    #x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k0*d)).reshape(k0, d)
+    x = np.random.multivariate_normal(np.zeros(k0*d), np.identity(k0*d), 1).reshape(k0, d)
+    x = x / (np.apply_along_axis(np.linalg.norm, 1, x))[:, None]
+    x = factor_model * x
 
-    weights = np.repeat(1.0/k0, k0)
+    '''
+    # Uniform between hypercube points model:
+    x = np.random.uniform(-1.0/np.sqrt(d), 1.0/np.sqrt(d), k0*d).reshape(k0, d)
+    '''
+
+    '''
+    # Uniform on hypercube model:
+    x = np.asarray(random.choices([1/np.sqrt(d), -1/np.sqrt(d)], k=k0*d)).reshape(k0, d)
+    '''
+
+    #weights = np.repeat(1.0/k0, k0)
     #weights = np.array((0.25, 0.75))
-    #weights = np.random.dirichlet(np.repeat(1.0, k0), 1).reshape(k0, )
+    weights = np.random.dirichlet(np.repeat(1.0, k0), 1).reshape(k0, )
     
     # If you want the true model to be centered:
     #x_centered = x - np.average(x, axis=0, weights=weights)
@@ -166,7 +175,7 @@ k = 2
 ld = k-1
 d = 100
 factor_model = 2
-num_sims = 10
+num_sims = 2
 sigma = 1
 n_range = np.arange(10000, 200000, 10000)
 factor_weights = 1

@@ -1,6 +1,9 @@
 """
 module for high-dimensional denoised method of moments algorithm
+Note that the original DMM.estimate() function returns an object of class ModelGM
+The DMM_HD.estimate_ld() and DMM_HD.estimate() functions return objects of class DiscreteRV_HD
 """
+
 from dmm import DMM
 from model_gm import ModelGM_HD, sample_gm
 from discrete_rv import DiscreteRV_HD, wass_hd
@@ -14,15 +17,16 @@ import time
 
 class DMM_HD():
     """
-    class for denoised method of moments for high dimensional gaussian mixture model
+    class for spectral sliced method of moments for high dimensional gaussian mixture model
 
     """
 
     def __init__(self, k, ld, sigma):
         """
         Args:
-        k: Integer. The number of components in the model.
-        ld: Integer. The latent dimension of the model (usually k or k-1).
+        k: Integer. The number of components we believe are in the model.
+        ld: Integer. Our estimated latent dimension of the model. Usually k or k-1 (the latter if we centered).
+           But if d < k-1, it will be d.
         sigma: Float. The known standard deviation.
         """
         
@@ -34,6 +38,7 @@ class DMM_HD():
     def estimate_center_space(self, sample):
         """
         Method to estimate the space spanned by the signal of sample.
+        It assumes the data dimension d > ld.
 
         Args:
         sample: Array(float, n x d). Sample from a d-dim Gaussian mixture model.
@@ -64,7 +69,8 @@ class DMM_HD():
         """
         
         return round((num)**(1.0/(4.0*self.k - 2.0)))
-        
+
+
 
     def generate_net_weights(self, num, factor_weights):
         """
@@ -82,15 +88,25 @@ class DMM_HD():
         """
         
         rate_inverse = self.compute_rate_inverse(num)
-        return simplex_grid(self.k, factor_weights * rate_inverse) # If you use your simplex_grid function
-        #return simplex_grid(self.k, factor_weights * rate_inverse) / (factor_weights * rate_inverse) # If you use the Oyama simplex_grid function
+        size = factor_weights * rate_inverse
+        if self.k == 3:
+            grid_1d = np.linspace(0.0, 1.0, size+1) # Include endpoints
+            grid = [] 
+            for i in range(len(grid_1d)):
+                for j in range(len(grid_1d) - i):
+                    grid.append(np.array((grid_1d[i], grid_1d[j], 1 - grid_1d[i] - grid_1d[j])))
+            return np.asarray(grid)
+        else:
+            return simplex_grid(self.k, size) / (size) # Use the Oyama simplex_grid function
 
 
-    '''
     def generate_net_thetas(self, num, factor_thetas):
         """
-        One method to generate epsilon net on unit sphere S^{ld-1}.
-        This method generates (factor_thetas/epsilon))^(ld-1) random Gaussian vectors in ld space and normalizes them. Approximate grid. 
+        Method to generate epsilon net on unit sphere S^{ld-1}.
+        When ld=2, this method generates (1/epsilon) grid points on alpha, then forms the unit vectors (cos alpha, sin alpha).
+        For ld!=2, his method generates (factor_thetas/epsilon))^(ld-1) random Gaussian vectors in ld space and normalizes them. Approximate grid. 
+        This is intended to be used only when ld >= 2. It can be run for ld=1, but in that case will generate a net of size 1. 
+        This is fine since this function is never invoked in the main algorithm when ld=1.
         Here epsilon is the rate, so 1/epsilon is rate_inverse.
 
         Args:
@@ -99,16 +115,22 @@ class DMM_HD():
             If > 1.0, makes grid finer.
 
         Returns:
-        Array(float, (size of net) x ld).
+        Array(float, (size of epsilon net in ld-dimensional unit sphere) x ld).
         """
-        
+
         rate_inverse = self.compute_rate_inverse(num)
-        nt = (factor_thetas*rate_inverse)**(self.ld-1)
-        thetas = np.random.multivariate_normal(np.zeros(self.ld), np.identity(self.ld), int(nt))
-        return (thetas.T / np.apply_along_axis(np.linalg.norm, 1, thetas)).T
+        
+        if self.ld == 2:
+            grid_angle = np.linspace(-np.pi, np.pi, factor_thetas*rate_inverse)
+            return  np.array((np.cos(grid_angle), np.sin(grid_angle))).T
+        
+        else:
+            nt = (factor_thetas*rate_inverse)**(self.ld-1)
+            thetas = np.random.multivariate_normal(np.zeros(self.ld), np.identity(self.ld), int(nt))
+            return (thetas.T / np.apply_along_axis(np.linalg.norm, 1, thetas)).T
 
-
-
+    
+    '''
     def generate_net_thetas(self, num, factor_thetas):
         """
         One method to generate epsilon net on unit vectors in ld space.
@@ -135,58 +157,7 @@ class DMM_HD():
         thetas = (thetas.T / np.apply_along_axis(np.linalg.norm, 1, thetas)).T # Take unit norm
 
         return np.unique(thetas.round(decimals=4), axis=0)
-
-    
-    def generate_net_thetas(self, num, factor_thetas):
-        """
-        One method to generate epsilon net on unit vectors in ld space.
-        This method generates a net on the unit rectangle in R^2.
-        It then projects those vectors to the unit sphere.
-        BUT this method only works for self.ld = 2. 
-
-        Args:
-        num: Int. Number of samples in dataset.
-        factor_thetas: Float. factor by which to multiply the rate.
-            If > 1.0, makes grid finer.
-
-        Returns:
-        Array(float, (size of net) x ld).
-        """
-
-        rate_inverse = self.compute_rate_inverse(num)
-        grid_1d = np.arange(-1.0, 1.001, 1.0/(factor_thetas * rate_inverse))
-        top = np.array((grid_1d, np.repeat(1.0, len(grid_1d))))
-        bottom = np.array((grid_1d, np.repeat(-1.0, len(grid_1d))))
-        right = np.array((np.repeat(1.0, len(grid_1d)), grid_1d))
-        left = np.array((np.repeat(-1.0, len(grid_1d)), grid_1d))
-        thetas = np.concatenate((top, bottom, right, left), axis=1)
-        thetas = thetas[~np.all(thetas == 0, axis=1)] # Remove any row with all zeros
-        thetas = (thetas.T / np.apply_along_axis(np.linalg.norm, 1, thetas)) # Take unit norm
-
-        return np.unique(thetas.round(decimals=4), axis=0)
     '''
-
-
-    def generate_net_thetas(self, num, factor_thetas):
-        """
-        One method to generate epsilon net on unit vectors in ld space.
-        This method generates (1/epsilon) grid points on alpha, then forms the unit vectors (cos alpha, sin alpha).
-        BUT this method only works for self.ld = 2. 
-
-        Args:
-        num: Int. Number of samples in dataset.
-        factor_thetas: Float. factor by which to multiply the rate.
-            If > 1.0, makes grid finer.
-
-        Returns:
-        Array(float, (size of epsilon net in ld space) x ld-1).
-        """
-
-        rate_inverse = self.compute_rate_inverse(num)
-        grid_angle = np.linspace(-np.pi, np.pi, factor_thetas*rate_inverse)
-
-        return  np.array((np.cos(grid_angle), np.sin(grid_angle))).T
-    
    
 
     def generate_candidates(self, sample_ld, net_weights):
@@ -294,7 +265,7 @@ class DMM_HD():
         num = len(sample_ld)
         
         net_weights = self.generate_net_weights(num, factor_weights)
-        net_thetas = self.generate_net_thetas(num, factor_thetas)
+        net_thetas = self.generate_net_thetas(num, factor_thetas)    
         nt = len(net_thetas)
 
         candidate_ests = self.generate_candidates(sample_ld, net_weights)
@@ -311,7 +282,7 @@ class DMM_HD():
                 errors_candidate_ests[i, j] = wass_hd(candidate_ests_theta[(i * nt) + j], theta_ests[j])
 
         max_error = np.max(errors_candidate_ests, axis=1)
-        est_selected = candidate_ests[np.argmin(max_errors)]
+        est_selected = candidate_ests[np.argmin(max_error)]
 
         return est_selected
 
@@ -344,6 +315,7 @@ class DMM_HD():
 
         Args:
         sample: Array(float, num x d). Sample from d-dim Gaussian mixture model.
+           If d <= ld, will run low-dim DMM. 
         factor_weights: Scalar(float).
         factor_thetas: Scalar(float).
         MLE: Boolean. True if you want to do the MLE method for weights.
@@ -353,59 +325,49 @@ class DMM_HD():
         
         """
 
-        num = len(sample)
-        U_ld = self.estimate_center_space(sample)
-        sample_ld = np.matmul(sample, U_ld)
+        num = sample.shape[0]
+        d = sample.shape[1]
+        
+        if d > self.ld:
+            U_ld = self.estimate_center_space(sample)
+            sample_ld = np.matmul(sample, U_ld)
+        else:
+            sample_ld = sample
 
-        if (self.ld == 1):
+        if self.ld == 1: # In this case, put things in the correct format to run DMM() instead of DMM_HD()
             dmm = DMM(k=self.k, sigma=self.sigma)
             sample_ld = sample_ld.reshape(num, )
-            est_ld = dmm.estimate(sample_ld)
-            est_centers = np.matmul(est_ld.centers.reshape(self.k, self.ld), U_ld.T)
-            est = DiscreteRV_HD(est_ld.weights, est_centers)
-
+            est_ld = dmm.estimate(sample_ld) # Returns object of class ModelGM, with est_ld.weights and est_ld.centers
+            est_ld_atoms = est_ld.centers.reshape(self.k, self.ld)
 
         else:
             if (MLE):
                 est_ld = self.estimate_ld_mle(sample_ld)
-                est = DiscreteRV_HD(est_ld.weights, np.matmul(est_ld.atoms, U_ld.T))
             else:
-                est_ld = self.estimate_ld(sample_ld, factor_weights, factor_thetas)
-                est = DiscreteRV_HD(est_ld.weights, np.matmul(est_ld.atoms, U_ld.T))
+                est_ld = self.estimate_ld(sample_ld, factor_weights, factor_thetas) # Returns object of class DiscreteRV_HD, with est_ld.weights and est_ld.atoms
+            est_ld_atoms = est_ld.atoms
+
+        if d > self.ld:
+            est = DiscreteRV_HD(est_ld.weights, np.matmul(est_ld_atoms, U_ld.T))
+        else:
+            est = DiscreteRV_HD(est_ld.weights, est_ld_atoms)
 
         return est
 
 
 
-def simplex_grid(k, size):
-    """
-    Method to construct a grid on the unit (k-1) dimensional simplex. 
-
-    Args:
-    k: Scalar(int). Dimension of simplex is k-1.
-    size: Scalar(int). Size along each coordinate (inverse fineness of simplex). 
-
-    Returns:
-    Array(float, L x k). L = number of vectors in simplex grid. 
-    """
-        
-    grid_1d = np.linspace(0.0, 1.0, size+1) # Include endpoints
-    grid = [] # Bad to append like this
-    for i in range(len(grid_1d)):
-        for j in range(len(grid_1d) - i):
-            grid.append(np.array((grid_1d[i], grid_1d[j], 1 - grid_1d[i] - grid_1d[j])))
-    return np.asarray(grid)
 
 
-'''
+
 def simplex_grid(m, n):
     """
     Method to construct a grid on the unit (m-1) dimensional simplex. 
     Adapted from https://github.com/oyamad/simplex_grid/blob/master/simplex_grid.py
 
+
     Args:
-    m: Scalar(int). Dimension of simplex is m-1.
-    n: Scalar(int). Fineness of simplex. 
+    m: Scalar(int). Dimension of simplex is m-1. Will be k. 
+    n: Scalar(int). Size of simplex along each coordinate (inverse fineness of simplex). Will be rate_inverse.
 
     Returns:
     Array(float, L x m). L = (n+m-1) choose (m-1).  
@@ -439,7 +401,6 @@ def simplex_grid(m, n):
     return out
 
 
-'''
 
 
 
